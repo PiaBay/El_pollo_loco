@@ -27,8 +27,8 @@ class World {
             this.chickens.push(new Chicken());
         }
 
-        this.clouds.push(new Cloud(300, 50));
-        this.clouds.push(new Cloud(600, 70));
+        this.clouds.push(new Cloud(250, 50));
+        this.clouds.push(new Cloud(650, 70));
 
         this.setupKeyboard();
         this.draw();
@@ -42,9 +42,11 @@ class World {
 
         //this.backgroundObjects.forEach(bg => bg.moveLeft());
         this.addObjectsToMap(this.backgroundObjects);
-        this.addObjectsToMap(this.clouds);
         this.addObjectsToMap(this.chickens);
         this.addToMap(this.character);
+
+        this.clouds.forEach(cloud => cloud.moveLeft());
+        this.addObjectsToMap(this.clouds);
 
         let self = this;
         requestAnimationFrame(function () {

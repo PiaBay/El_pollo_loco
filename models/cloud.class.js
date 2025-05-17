@@ -6,5 +6,14 @@ class Cloud extends MovableObject {
         this.y = y;
         this.width = 350;
         this.height = 180;
+        this.speed = 0.3;
     }
+
+    moveLeft() {
+        this.x -= this.speed;
+        if (this.x + this.width <= 0) {
+            this.x = 720;
+        }
+    }
+    
 }
