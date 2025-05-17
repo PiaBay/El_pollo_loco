@@ -1,3 +1,10 @@
+const keyboard = {
+  LEFT: false,
+  RIGHT: false,
+  UP: false,
+  DOWN: false,
+  SPACE: false
+};
 
 /**
  * Adjusts the canvas for high DPI displays (e.g. Retina).
@@ -22,7 +29,51 @@ let canvas;
 let world;
 
 function startGame() {
- let canvas = document.getElementById('gameCanvas');
- let ctx = adjustCanvasForHDPI(canvas); // ⬅️ Anpassung aktiv
-   let world = new World(canvas, ctx); // Übergebe den angepassten Context an World
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = adjustCanvasForHDPI(canvas);
+
+  const character = new Character();
+  character.loadImages(character.IMAGES_WALKING, () => {
+    character.setImage(character.IMAGES_WALKING[0]);
+    character.startWalkingAnimation();
+    world = new World(canvas, ctx, character);
+  });
 }
+
+window.addEventListener('keydown', (e) => {
+  switch (e.key) {
+    case 'ArrowRight':
+      keyboard.RIGHT = true;
+      break;
+    case 'ArrowLeft':
+      keyboard.LEFT = true;
+      break;
+    case 'ArrowUp':
+      keyboard.UP = true;
+      break;
+    case ' ':
+    case 'Space':
+      keyboard.SPACE = true;
+      break;
+  }
+});
+
+window.addEventListener('keyup', (e) => {
+  switch (e.key) {
+    case 'ArrowRight':
+      keyboard.RIGHT = false;
+      break;
+    case 'ArrowLeft':
+      keyboard.LEFT = false;
+      break;
+    case 'ArrowUp':
+      keyboard.UP = false;
+      break;
+    case ' ':
+    case 'Space':
+      keyboard.SPACE = false;
+      break;
+  }
+});
+
+

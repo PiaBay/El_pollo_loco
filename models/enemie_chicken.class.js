@@ -1,11 +1,36 @@
+/**
+ * Represents a walking chicken enemy.
+ * Inherits animation and positioning logic from MovableObject.
+ */
 class Chicken extends MovableObject {
-    constructor() {
+    /**
+     * Array of image paths used for the chicken's walking animation.
+     * @type {string[]}
+     */
+    IMAGES_WALKING = [
+        './assets/img_pollo_locco/img/3_enemies_chicken/chicken_normal/1_walk/1_w.png',
+        './assets/img_pollo_locco/img/3_enemies_chicken/chicken_normal/1_walk/2_w.png',
+        './assets/img_pollo_locco/img/3_enemies_chicken/chicken_normal/1_walk/3_w.png'
+    ];
+
+    /**
+     * Creates a new chicken instance at a random X position.
+     * Loads animation images and starts the walking animation.
+     */
+    constructor(xPos, onReadyCallback) {
         super();
-        this.loadImage('./assets/img_pollo_locco/img/3_enemies_chicken/chicken_normal/1_walk/1_w.png');
-        this.x = 200 + Math.random() * 500;
-        this.y = 330;
+        this.x = xPos;
+        this.y = 330;                       
         this.width = 70;
         this.height = 90;
-    }
-}
+        this.speed = 0.3 + Math.random() * 0.5; // z. B. zwischen 0.3 und 0.8
 
+        this.loadImages(this.IMAGES_WALKING, () => {
+            this.setImage(this.IMAGES_WALKING[0]);
+            this.startAnimation(this.IMAGES_WALKING,); // 150ms per frame
+            if (onReadyCallback) onReadyCallback(this);
+        });
+    }
+
+
+}

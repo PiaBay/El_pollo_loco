@@ -5,27 +5,34 @@ class World {
     chickens = [];
     clouds = [];
     backgroundObjects = [];
+    keys = {};
 
-    constructor(canvas,ctx) {
+    constructor(canvas,ctx,character) {
         this.canvas = canvas;
         this.ctx = ctx;
-        // Hintergrundobjekte erzeugen (empfohlene Schleifenlösung)
         const layers = [
             { path: './assets/img_pollo_locco/img/5_background/layers/air.png', },
             { path: './assets/img_pollo_locco/img/5_background/layers/3_third_layer/1.png',},
             { path: './assets/img_pollo_locco/img/5_background/layers/2_second_layer/1.png',},
             { path: './assets/img_pollo_locco/img/5_background/layers/1_first_layer/1.png',}
         ];
-
+        
         layers.forEach(layer => {
             this.backgroundObjects.push(new BackgroundObject(layer.path, 0, layer.speed));
             this.backgroundObjects.push(new BackgroundObject(layer.path, 720, layer.speed));
         });
-        this.character = new Character();
+        
+        this.character = character;
+        let startX = 800;
 
         for (let i = 0; i < 5; i++) {
-            this.chickens.push(new Chicken());
+            const chicken = new Chicken(startX, (c) => {
+                this.chickens.push(c);
+            });
+            const offset = 200 + Math.random() * 300;
+            startX += offset;
         }
+
 
         this.clouds.push(new Cloud(250, 50));
         this.clouds.push(new Cloud(650, 70));
@@ -40,18 +47,32 @@ class World {
     draw() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        //this.backgroundObjects.forEach(bg => bg.moveLeft());
+        // Bewegung & Animation
+        if (keyboard.RIGHT) {
+            this.character.moveRight();
+            this.character.startWalkingAnimation();
+        } else if (keyboard.LEFT) {
+            this.character.moveLeft();
+            this.character.startWalkingAnimation();
+        } else if (this.character.walking) {
+            this.character.stopWalkingAnimation();
+        }
+
+        // Hintergrund
         this.addObjectsToMap(this.backgroundObjects);
+
+        // Gegner
+        this.chickens.forEach(chicken => chicken.moveLeft());
         this.addObjectsToMap(this.chickens);
+
+        // Hauptfigur (mit Spiegelung, handled in addToMap)
         this.addToMap(this.character);
 
+        // Wolken
         this.clouds.forEach(cloud => cloud.moveLeft());
         this.addObjectsToMap(this.clouds);
 
-        let self = this;
-        requestAnimationFrame(function () {
-            self.draw();
-        });
+        requestAnimationFrame(() => this.draw());
     }
 
     /**
@@ -63,19 +84,46 @@ class World {
     }
 
     /**
-     * Fügt ein einzelnes Objekt zur Map hinzu.
+     * Fügt ein einzelnes Objekt zur Map hinzu, inklusive Spiegelung bei Bedarf.
      * @param {MovableObject} mo 
      */
     addToMap(mo) {
         if (mo.img && mo.img.complete && mo.img.naturalWidth > 0) {
-            this.ctx.drawImage(mo.img, mo.x, mo.y, mo.width, mo.height);
+            if (mo.otherDirection) {
+                this.ctx.save();
+                this.ctx.translate(mo.x + mo.width, 0);  // Position beachten
+                this.ctx.scale(-1, 1);                   // Spiegelung aktivieren
+                this.ctx.drawImage(mo.img, 0, mo.y, mo.width, mo.height);
+                this.ctx.restore();
+            } else {
+                this.ctx.drawImage(mo.img, mo.x, mo.y, mo.width, mo.height);
+            }
         }
     }
 
+    /**
+     * Initialisiert Tastatursteuerung für die Richtung.
+     */
     setupKeyboard() {
         window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight') {
-                this.character.moveRight();
+            switch (e.key) {
+                case 'ArrowRight':
+                    keyboard.RIGHT = true;
+                    break;
+                case 'ArrowLeft':
+                    keyboard.LEFT = true;
+                    break;
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            switch (e.key) {
+                case 'ArrowRight':
+                    keyboard.RIGHT = false;
+                    break;
+                case 'ArrowLeft':
+                    keyboard.LEFT = false;
+                    break;
             }
         });
     }
