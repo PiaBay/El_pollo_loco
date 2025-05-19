@@ -25,6 +25,11 @@ class Character extends MovableObject {
      */
     walking = false;
 
+
+    /** @type {number} */
+    animationSpeed = 80;
+
+
     /**
      * Creates a new character, loads images and sets initial position and size.
      */
@@ -45,9 +50,9 @@ class Character extends MovableObject {
      * Prevents moving outside the canvas.
      */
     moveRight() {
-        const maxRight = 720 - this.width;
+        const maxRight = 2500 - this.width;
         if (this.x < maxRight) {
-            this.x += 5;
+            this.x += this.speed;
         }
         this.otherDirection = false;
     }
@@ -57,7 +62,7 @@ class Character extends MovableObject {
      */
     moveLeft() {
         if (this.x > 0) {
-            this.x -= 5;
+            this.x -= this.speed;
         }
         this.otherDirection = true;
     }
@@ -68,7 +73,7 @@ class Character extends MovableObject {
     startWalkingAnimation() {
         if (this.walking) return;
         this.walking = true;
-        this.startAnimation(this.IMAGES_WALKING, 120);
+        this.startAnimation(this.IMAGES_WALKING, this.animationSpeed);
     }
 
     /**

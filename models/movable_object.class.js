@@ -46,6 +46,10 @@ class MovableObject {
     currentImage = 0;
 
 
+    /** @type {number} */
+    speed = 7;
+
+
     /**
  * Reference to animation interval.
  * @type {number | null}

@@ -14,14 +14,4 @@ class BackgroundObject extends MovableObject {
         this.height = 480; // Passe an deine Canvas-Höhe an
     }
 
-    /**
-     * Bewegt das Objekt kontinuierlich nach links.
-     * Sobald es ganz links draußen ist, wird es rechts neu positioniert (Endlosschleife).
-     */
-    moveLeft() {
-        this.x -= this.speed;
-        if (this.x + this.width <= 0) {
-            this.x = 720; // Startet wieder rechts (Canvas-Breite anpassen!)
-        }
-    }
 }
