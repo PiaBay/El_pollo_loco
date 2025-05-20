@@ -23,6 +23,8 @@ class World {
     /** @type {number} */
     camera_x = 0;
 
+    cameraLocked = false;
+
     /**
      * Initializes the world and loads the level content.
      * @param {HTMLCanvasElement} canvas - The canvas element.
@@ -47,6 +49,7 @@ class World {
      * Main drawing function, handles movement, rendering, and camera.
      */
     draw() {
+        this.character.applyGravity();
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.save();
         this.ctx.translate(-this.camera_x, 0);
@@ -72,14 +75,34 @@ class World {
         }
 
         if (this.camera_x < 0) this.camera_x = 0;
-
+        if (this.bossActivated && this.character.x >= this.bossTargetX - 100) {
+            this.cameraLocked = true;
+        }
+        if (!this.cameraLocked) {
+            this.camera_x = this.character.x - 100;
+        }
         // Character
         this.addToMap(this.character);
+        //Endboss
+        this.bossTargetX = 2300;
         if (this.endboss) {
-            this.endboss.moveLeft(); // oder KI
-            this.endboss.startWalkingAnimation(); // ggf. nur wenn sichtbar
-            this.addToMap(this.endboss);
+            // Trigger bei Spieler
+            if (!this.bossActivated && this.character.x >= 2200) {
+                this.bossActivated = true;
+                this.endboss.activate(); // startet Animation
+                this.chickens = []; // Gegner stoppen
+            }
+
+            if (this.bossActivated) {
+                // Reinfliegen bis Zielposition erreicht ist
+                if (this.endboss.x > this.bossTargetX) {
+                    this.endboss.x -= 5; // Fluggeschwindigkeit
+                }
+
+                this.addToMap(this.endboss);
+            }
         }
+
 
         // Clouds
         this.clouds.forEach(cloud => cloud.moveLeft());
@@ -128,6 +151,11 @@ class World {
                 case 'ArrowLeft':
                     keyboard.LEFT = true;
                     break;
+                case 'ArrowUp':
+                    if (!this.character.isInAir) {
+                        this.character.jump();
+                    }
+                    break;
             }
         });
 
@@ -142,4 +170,5 @@ class World {
             }
         });
     }
+
 }

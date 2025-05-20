@@ -67,5 +67,5 @@ function createBackground() {
 }
 
 function createEndboss() {
-    return new Endboss(2300); // z. B. ganz am Ende des Levels
+    return new Endboss(3000); // deutlich rechts vom Levelende
 }

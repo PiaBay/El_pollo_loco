@@ -145,4 +145,6 @@ setImageByIndex(i) {
         }
     }
 
-}
+    }
+
+

@@ -1,5 +1,6 @@
 class Endboss extends MovableObject {
     walking = false;
+    activated = false;
 
     IMAGES_WALKING = [
         './assets/img_pollo_locco/img/4_enemie_boss_chicken/1_walk/G1.png',
@@ -21,6 +22,16 @@ class Endboss extends MovableObject {
         this.speed = 0.3;
     }
 
+    /**
+ * Activates the boss: starts animation and movement.
+ */
+    activate() {
+        if (this.activated) return;
+        this.activated = true;
+        this.startWalkingAnimation();
+        // Weitere Aktionen möglich: this.shout(), this.attack(), etc.
+    }
+    
     startWalkingAnimation() {
         if (this.walking) return;
         this.walking = true;
