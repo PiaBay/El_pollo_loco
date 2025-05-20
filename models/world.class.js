@@ -38,8 +38,8 @@ class World {
         this.backgroundObjects = level1.backgroundObjects;
         this.chickens = level1.enemies;
         this.clouds = level1.clouds;
-
         this.setupKeyboard();
+        this.endboss = level1.endboss;
         this.draw();
     }
 
@@ -75,6 +75,11 @@ class World {
 
         // Character
         this.addToMap(this.character);
+        if (this.endboss) {
+            this.endboss.moveLeft(); // oder KI
+            this.endboss.startWalkingAnimation(); // ggf. nur wenn sichtbar
+            this.addToMap(this.endboss);
+        }
 
         // Clouds
         this.clouds.forEach(cloud => cloud.moveLeft());

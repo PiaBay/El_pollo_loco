@@ -1,7 +1,8 @@
 const level1 = new Level(
     createEnemies(),
     createClouds(),
-    createBackground()
+    createBackground(),
+    createEndboss()
 );
 
 // Funktionen:
@@ -63,4 +64,8 @@ function createBackground() {
     }
 
     return bg;
+}
+
+function createEndboss() {
+    return new Endboss(2300); // z. B. ganz am Ende des Levels
 }
