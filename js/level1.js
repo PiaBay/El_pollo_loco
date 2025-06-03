@@ -1,20 +1,29 @@
+const coins = [
+    new Coin(500, 100),
+    new Coin(800, 120),
+    new Coin(1200, 80)
+];
+
 const level1 = new Level(
     createEnemies(),
     createClouds(),
     createBackground(),
-    createEndboss()
+    createEndboss(),
+    coins // ⬅️ wird jetzt an 5. Stelle übergeben
 );
+
 
 // Funktionen:
 function createEnemies() {
-    const enemies = [];
-    let startX = 800;
+    let enemies = [];
     for (let i = 0; i < 5; i++) {
-        enemies.push(new Chicken(startX));
-        startX += 200 + Math.random() * 300;
+        // weiter auseinander & etwas zufälliger
+        let xPos = 600 + i * 500 + Math.random() * 200;
+        enemies.push(new Chicken(xPos));
     }
     return enemies;
 }
+
 
 function createClouds() {
     return [

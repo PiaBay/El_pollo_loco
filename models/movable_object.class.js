@@ -145,6 +145,19 @@ setImageByIndex(i) {
         }
     }
 
+
+/**
+ * Checks if this object is colliding with another.
+ * @param {MovableObject} other - Another game object.
+ * @returns {boolean} True if bounding boxes intersect.
+ */
+    isColliding(other) {
+        const offset = 10;
+
+        return this.x + this.width - offset > other.x + offset &&
+            this.x + offset < other.x + other.width - offset &&
+            this.y + this.height - offset > other.y + offset &&
+            this.y + offset < other.y + other.height - offset;
     }
 
-
+}
