@@ -47,7 +47,7 @@ class MovableObject {
 
 
     /** @type {number} */
-    speed = 7;
+    speed = 5;
 
 
     /**
@@ -159,5 +159,37 @@ setImageByIndex(i) {
             this.y + this.height - offset > other.y + offset &&
             this.y + offset < other.y + other.height - offset;
     }
+    applyGravity() {
+        if (this.fallAfterDeath) {
+            this.y += this.velocityY;
+            this.velocityY += this.gravity;
+            this.x += this.vxAfterDeath || 0;
+            return;
+        }
+
+        this.velocityY += this.gravity;
+        this.y += this.velocityY;
+
+        if (this.y >= this.groundY) {
+            this.y = this.groundY;
+            this.velocityY = 0;
+
+            if (this.isInAir) {
+                this.isInAir = false;
+                this.jumpAnimationRunning = false;
+                clearInterval(this.animationInterval);
+                this.animationInterval = null;
+                if (!this.isDead) this.setImage(this.IMAGES_WALKING[0]);
+            }
+        } else {
+            if (!this.isInAir) {
+                this.isInAir = true;
+                if (!this.isDead) this.setImage(this.IMAGE_FALLING);
+            }
+        }
+    }
+
+    
+
 
 }

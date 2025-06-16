@@ -13,17 +13,28 @@
     <script src="./models/cloud.class.js"></script>
     <script src="./models/level.class.js"></script>
         <script src="./models/statusbar.class.js"></script>
+        <script src="./models/endboss-statusbar.class.js"></script>
+        <script src="./models/statusbar_coins.class.js"></script>
+        <script src="./models/bottle-statusbar.js"></script>
+        <script src="./models/bottles.class.js"></script>
             <script src="./models/coins.class.js"></script>
-            <script src="./models/statusbar_coins.class.js"></script>
-
-    <script src="./models/endboss.level.js"></script>
-    <script src="./models/world.class.js"></script>
-
+            <script src="./models/throwable-object.class.js"></script>
+    <script src="./models/endboss.class.js"></script>
+    
     <script src="./js/level1.js"></script>
+    <script src="./models/world.class.js"></script>
     <script src="./js/game.js"></script>
 </head>
 <body onload="startGame()">
     <h1>El Pollo Loco</h1>
     <canvas id="gameCanvas" width="720" height="480"></canvas>
+    <div id="game-over-screen" class="overlay hidden">
+        <div class="game-over-box">
+            <h1>☠️ Game Over</h1>
+            <button onclick="restartGame()">🔁 Erneut spielen</button>
+            <button onclick="exitGame()">❌ Beenden</button>
+        </div>
+    </div>
+
 </body>
 </html>

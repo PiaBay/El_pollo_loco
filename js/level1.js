@@ -1,19 +1,39 @@
-const coins = [
-    new Coin(500, 100),
-    new Coin(800, 120),
-    new Coin(1200, 80)
-];
-
 const level1 = new Level(
     createEnemies(),
     createClouds(),
     createBackground(),
     createEndboss(),
-    coins // ⬅️ wird jetzt an 5. Stelle übergeben
-);
+    createCoins(),
+    createBottles()
+    );
 
 
 // Funktionen:
+function createCoins() {
+    return [
+        new Coin(200, 180),
+        new Coin(600, 120),
+        new Coin(850, 80),
+        new Coin(1000, 180),
+        new Coin(1200, 50),
+        new Coin(1600, 90),
+        new Coin(1800, 120),
+        new Coin(2000, 100),
+    ];
+}
+
+function createBottles() {
+    return [
+        new Bottle(300, 360),
+        new Bottle(780, 120),
+        new Bottle(1050, 350),
+        new Bottle(1280, 120),
+        new Bottle(1550, 350),
+        new Bottle(2000, 120),
+    ];
+}
+
+
 function createEnemies() {
     let enemies = [];
     for (let i = 0; i < 5; i++) {
@@ -78,3 +98,6 @@ function createBackground() {
 function createEndboss() {
     return new Endboss(3000); // deutlich rechts vom Levelende
 }
+
+
+

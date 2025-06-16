@@ -39,3 +39,11 @@ function startGame() {
     world = new World(canvas, ctx, character);
   });
 }
+
+function restartGame() {
+  location.reload();
+}
+
+function exitGame() {
+  alert("Spiel beendet."); // Oder window.close(); wenn in eigenem Fenster
+}

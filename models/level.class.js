@@ -10,11 +10,12 @@ class Level {
      * @param {Endboss} endboss - The level's final boss
      * @param {Coin[]} [coins=[]] - Optional: collectable coins in this level
      */
-    constructor(enemies, clouds, backgroundObjects, endboss, coins = []) {
+    constructor(enemies, clouds, backgroundObjects, endboss, coins = [], bottles = []) {
         this.enemies = enemies;
         this.clouds = clouds;
         this.backgroundObjects = backgroundObjects;
         this.endboss = endboss;
-        this.coins = coins;
-    }
+        this.coins = coins || []; 
+        this.bottles = bottles || [];
+}
 }

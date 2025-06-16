@@ -16,11 +16,15 @@ class Character extends MovableObject {
 
     /** Timing for damage cooldown */
     lastHitTime = 0;
-    hurtCooldown = 500; // in ms
+    hurtCooldown = 400; // in ms
 
     /** Health and speed */
     energy = 100;
     animationSpeed = 80;
+
+
+    /** Blockiert Bewegung während Animation */
+    isStunned = false;
 
     /** Animation frames */
     IMAGES_WALKING = [
@@ -78,39 +82,8 @@ class Character extends MovableObject {
     }
 
     canTakeDamage() {
-        return !this.isHurt && Date.now() - this.lastHitTime > this.hurtCooldown;
+        return Date.now() - this.lastHitTime > this.hurtCooldown;
     }
-
-    applyGravity() {
-        if (this.fallAfterDeath) {
-            this.y += this.velocityY;
-            this.velocityY += this.gravity;
-            this.x += this.vxAfterDeath || 0;
-            return;
-        }
-
-        this.velocityY += this.gravity;
-        this.y += this.velocityY;
-
-        if (this.y >= this.groundY) {
-            this.y = this.groundY;
-            this.velocityY = 0;
-
-            if (this.isInAir) {
-                this.isInAir = false;
-                this.jumpAnimationRunning = false;
-                clearInterval(this.animationInterval);
-                this.animationInterval = null;
-                if (!this.isDead) this.setImage(this.IMAGES_WALKING[0]);
-            }
-        } else {
-            if (!this.isInAir) {
-                this.isInAir = true;
-                if (!this.isDead) this.setImage(this.IMAGE_FALLING);
-            }
-        }
-    }
-
     jump() {
         if (this.isDead) return;
         this.velocityY = -5;
@@ -120,14 +93,15 @@ class Character extends MovableObject {
     }
 
     moveRight() {
-        if (this.isDead) return;
-        const maxRight = 2500 - this.width;
+        if (this.isDead || this.isStunned) return; // <== NEU!
+        const maxRight = 3500 - this.width;
         if (this.x < maxRight) this.x += this.speed;
         this.otherDirection = false;
     }
 
+
     moveLeft() {
-        if (this.isDead) return;
+        if (this.isDead || this.isStunned) return; // <== NEU!
         if (this.x > 0) this.x -= this.speed;
         this.otherDirection = true;
     }
@@ -150,35 +124,65 @@ class Character extends MovableObject {
 
     takeDamage(amount) {
         if (this.isDead || !this.canTakeDamage()) return;
+
         this.energy = Math.max(0, this.energy - amount);
         this.lastHitTime = Date.now();
         this.isHurt = true;
+        this.isStunned = true;
+
         if (this.energy <= 0) {
             this.die();
         } else {
             this.playHurtAnimation();
+
+            // Immer nach 600ms Entsperren – unabhängig davon, ob Animation sauber lief
+            setTimeout(() => {
+                this.isHurt = false;
+                this.isStunned = false;
+            }, 600);
         }
     }
 
+
     playHurtAnimation() {
         if (this.isDead) return;
+
         clearInterval(this.animationInterval);
         this.animationInterval = null;
         this.currentImage = 0;
 
+        const hurtImages = this.IMAGES_HURT;
         let frame = 0;
+
         this.animationInterval = setInterval(() => {
-            if (frame < this.IMAGES_HURT.length) {
-                this.setImage(this.IMAGES_HURT[frame]);
+            if (frame < hurtImages.length) {
+                this.setImage(hurtImages[frame]);
                 frame++;
             } else {
                 clearInterval(this.animationInterval);
                 this.animationInterval = null;
+                this.currentImage = 0;
                 this.isHurt = false;
+                this.isStunned = false;
                 this.setImage(this.IMAGES_WALKING[0]);
             }
         }, 150);
     }
+
+    
+    throwBottle(world) {
+        // ⛔️ Nicht werfen, wenn keine Flaschen da oder Boss verletzt ist
+        if (world.availableBottles <= 0) return;
+        if (world.bossActivated && world.endboss.isHurt) return;
+
+        const bottle = new ThrowableObject(this.x + 30, this.y, this.otherDirection);
+        world.throwables.push(bottle);
+        world.availableBottles--;
+
+        world.bottleStatusBar.setBottles(world.availableBottles, world.totalBottles);
+    }
+
+
 
     die() {
         if (this.isDead) return;
