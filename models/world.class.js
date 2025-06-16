@@ -192,7 +192,6 @@ class World {
         }
     }
 
-
     updateEndbossBehavior() {
         if (!this.bossActivated) return;
 
@@ -219,9 +218,14 @@ class World {
             }
         }
 
+        // 🧲 Gravity nach dem Tod
+        if (boss.fallAfterDeath) {
+            boss.y += boss.velocityY;
+            boss.velocityY += boss.gravity;
+        }
+
         this.addToMap(boss);
     }
-
 
     updateEndbossCamera() {
         if (this.cameraLocked) {

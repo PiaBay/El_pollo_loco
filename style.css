@@ -5,7 +5,28 @@ body {
     align-items: center;
     height: 100vh;
     flex-direction: column;
-    background-color: #e88c42;
+                width: 100%;
+                    background-image: url('../assets/desert-4258740_1280.jpg');
+                    background-size: cover;
+                    background-position: center;
+                    background-repeat: no-repeat;
+}
+
+    
+    h1 {
+        padding-bottom: 60px;
+        font-family: 'Zabars';
+        font-weight: 400;
+        font-size: 80px;
+        margin: 0;
+        display: flex;
+}
+
+span{
+    font-family: 'Zabars';
+    font-weight: 200;
+    font-size: 38px;
+    color: black;
 }
 
 canvas {
@@ -33,6 +54,32 @@ position: absolute;
     justify-content: center;
 }
 
+   button {
+       background-color: #754114;
+       color: white;
+       border: none;
+       padding: 12px 24px;
+       border-radius: 8px;
+       font-size: 16px;
+       font-family: 'Zabars';
+       font-weight: 100;
+       cursor: pointer;
+       transition: background-color 0.2s ease;
+   }
+
+   button:hover {
+       background-color: #b86626;
+   }
+
+
+.button-bar {
+       display: flex;
+       justify-content: space-between;
+       position: absolute;
+       top: 20px;
+       left: 30px;
+       padding: 0 30px;
+   }
 
 .start-buttons {
     display: flex;
@@ -41,22 +88,20 @@ position: absolute;
 
 .start-buttons button {
     font-size: 20px;
-    padding: 15px 25px;
-    border-radius: 10px;
     border: none;
-    background-color: #ffae00;
-    color: white;
     cursor: pointer;
     transition: 0.3s;
+    background-color: transparent;
+    font-family: 'Zabars';
+    display: flex;
+    flex-direction: column;
 }
 
-.start-buttons button:hover {
-    background-color: #ffcc00;
-}
 
 .symbols{
-    width: 30px;
-    height: 30px;
+    width: 300px;
+    height: 300px;
+    padding-bottom: 25px;
 }
 
 

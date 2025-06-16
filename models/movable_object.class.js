@@ -179,7 +179,7 @@ setImageByIndex(i) {
                 this.jumpAnimationRunning = false;
                 clearInterval(this.animationInterval);
                 this.animationInterval = null;
-                if (!this.isDead) this.setImage(this.IMAGES_WALKING[0]);
+                if (!this.isDead) this.setImage(this.IMAGES_IDLE[0]);
             }
         } else {
             if (!this.isInAir) {
@@ -188,8 +188,4 @@ setImageByIndex(i) {
             }
         }
     }
-
-    
-
-
 }

@@ -27,6 +27,20 @@ class Character extends MovableObject {
     isStunned = false;
 
     /** Animation frames */
+    IMAGES_IDLE = [
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/idle/I-1.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/idle/I-2.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/idle/I-3.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/idle/I-4.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/idle/I-5.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/idle/I-6.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/idle/I-7.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/idle/I-8.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/idle/I-9.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/idle/I-10.png'
+    ];
+
+
     IMAGES_WALKING = [
         './assets/img_pollo_locco/img/2_character_pepe/2_walk/W-21.png',
         './assets/img_pollo_locco/img/2_character_pepe/2_walk/W-22.png',
@@ -74,8 +88,9 @@ class Character extends MovableObject {
         this.lastHitTime = 0;
         this.hurtCooldown = 200; // z. B. 500 ms Schutzzeit
 
+        this.loadImages(this.IMAGES_IDLE, () => this.setImage(this.IMAGES_IDLE[0]));
         this.loadImage(this.IMAGE_FALLING);
-        this.loadImages(this.IMAGES_WALKING, () => this.setImage(this.IMAGES_WALKING[0]));
+        this.loadImages(this.IMAGES_WALKING)
         this.loadImages(this.IMAGES_JUMPING);
         this.loadImages(this.IMAGES_HURT);
         this.loadImages(this.IMAGES_DEAD);
@@ -119,7 +134,7 @@ class Character extends MovableObject {
         clearInterval(this.animationInterval);
         this.animationInterval = null;
         this.currentImage = 0;
-        this.setImage(this.IMAGES_WALKING[0]);
+        this.setImage(this.IMAGES_IDLE[0]);
     }
 
     takeDamage(amount) {
@@ -169,7 +184,7 @@ class Character extends MovableObject {
         }, 150);
     }
 
-    
+
     throwBottle(world) {
         // ⛔️ Nicht werfen, wenn keine Flaschen da oder Boss verletzt ist
         if (world.availableBottles <= 0) return;

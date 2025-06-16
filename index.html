@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>El Pollo Loco</title>
     <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="./styles/font.css">
+
     <link class="fav-icon" rel="icon" href="./assets/img_pollo_locco/img/3_enemies_chicken/chicken_small/1_walk/2_w.png">
     <script src="./models/movable_object.class.js"></script>
     <script src="./models/background-object.class.js"></script>
@@ -25,16 +27,19 @@
     <script src="./models/world.class.js"></script>
     <script src="./js/game.js"></script>
 </head>
-<body onload="startGame()">
+<body>
     <div id="start-screen" class="start-end-screen">
         <h1>El Pollo Loco</h1>
     
         <div class="start-buttons">
-            <button id="start-btn"><img  class="symbols" src="./assets/saloon-3695003_1280.png">START</button>
+            <button id="start-btn"><img  class="symbols" src="./assets/saloon-3695003_1280.png"><span>START</span></button>
             <button id="help-btn"><a href="./html/help.html">
-                <img  class="symbols" src="./assets/signpost-308368_1280.png"></a>Hilfe</button>
-            <button id="settings-btn" ><img class="symbols" src="./assets/wagon-wheel-5004284_1280.png">EINSTELLUNG</button>
+                <img  class="symbols" src="./assets/signpost-308368_1280.png"></a><span>HILFE</span></button>
+            <button id="settings-btn" ><img class="symbols" src="./assets/wagon-wheel-5004284_1280.png"><span>EINSTELLUNG</span></button>
         </div>
+    </div>
+    <div  class="button-bar">
+        <button onclick="wentBack()">← Zurück</button>
     </div>
     <canvas id="gameCanvas" class="hidden"></canvas>
 <div id="end-screen" class="hidden start-end-screen">

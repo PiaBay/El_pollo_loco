@@ -29,7 +29,7 @@ let canvas;
 let world;
 
 function startGame() {
-  const canvas = document.getElementById('gameCanvas');
+  canvas = document.getElementById('gameCanvas'); // ✔️ greift auf globale Variable zu
   const ctx = adjustCanvasForHDPI(canvas);
 
   const character = new Character();
@@ -60,3 +60,13 @@ window.addEventListener('DOMContentLoaded', () => {
     startGame(); // Starte dein Spiel – z. B. mit deiner init()-Funktion
   });
 });
+
+function goBack() {
+  // Beispiel: Zurück zum Startbildschirm oder andere Seite
+  window.location.href = '../index.html'; 
+}
+
+function wentBack() {
+  // Beispiel: Zurück zum Startbildschirm oder andere Seite
+  window.location.href = './index.html';
+}
