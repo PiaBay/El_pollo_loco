@@ -26,15 +26,23 @@
     <script src="./js/game.js"></script>
 </head>
 <body onload="startGame()">
-    <h1>El Pollo Loco</h1>
-    <canvas id="gameCanvas" width="720" height="480"></canvas>
-    <div id="game-over-screen" class="overlay hidden">
-        <div class="game-over-box">
-            <h1>☠️ Game Over</h1>
-            <button onclick="restartGame()">🔁 Erneut spielen</button>
-            <button onclick="exitGame()">❌ Beenden</button>
+    <div id="start-screen" class="start-end-screen">
+        <h1>El Pollo Loco</h1>
+    
+        <div class="start-buttons">
+            <button id="start-btn"><img  class="symbols" src="./assets/saloon-3695003_1280.png">START</button>
+            <button id="help-btn"><a href="./html/help.html">
+                <img  class="symbols" src="./assets/signpost-308368_1280.png"></a>Hilfe</button>
+            <button id="settings-btn" ><img class="symbols" src="./assets/wagon-wheel-5004284_1280.png">EINSTELLUNG</button>
         </div>
     </div>
+    <canvas id="gameCanvas" class="hidden"></canvas>
+<div id="end-screen" class="hidden start-end-screen">
+    <img id="end-image" src="" alt="Game Result" />
+    <h1 id="end-text"></h1>
+    <button onclick="location.reload()">Restart</button>
+</div>
+
 
 </body>
 </html>

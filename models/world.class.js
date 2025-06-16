@@ -75,7 +75,11 @@ class World {
         requestAnimationFrame(() => this.draw());
 
         if (this.character.isDead && this.character.y > 500) {
-            this.showGameOverScreen();
+            this.showEndScreen(false); // ❌ You Lost
+        }
+
+        if (this.endboss?.isDead && this.endboss.y > 500) {
+            this.showEndScreen(true);  // ✅ You Won
         }
     }
 
@@ -152,7 +156,7 @@ class World {
 
             if (this.bossActivated && collides) {
                 console.log('💥 Flasche trifft Boss!');
-                this.endboss.hit(30, this.bossHealthBar); // 30 = Schaden
+                this.endboss.hit(35, this.bossHealthBar); // 30 = Schaden
                 return false;
             }
 
@@ -263,7 +267,25 @@ class World {
         });
     }
 
-    showGameOverScreen() {
-        document.getElementById('game-over-screen').classList.remove('hidden');
+
+    /**
+ * Shows the final game screen with image and text.
+ * @param {boolean} won - True if player won, false if lost
+ */
+    showEndScreen(won) {
+        const screen = document.getElementById('end-screen');
+        const text = document.getElementById('end-text');
+        const image = document.getElementById('end-image');
+
+        if (won) {
+            text.innerText = 'You Won!';
+            image.src = './assets/img_pollo_locco/img/You won, you lost/You Win A.png'; // ← dein Bild hier einfügen
+        } else {
+            text.innerText = 'You Lost!';
+            image.src = './assets/img_pollo_locco/img/You won, you lost/Game Over.png'; // ← dein Bild hier einfügen
+        }
+
+        screen.classList.remove('hidden');
     }
+
 }

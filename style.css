@@ -11,40 +11,70 @@ body {
 canvas {
     display: block;
     margin: 0 auto;
-    background-color: black;
+    width: 720px;
+     height: 480px;
 
 }
-.overlay {
-    position: fixed;
+
+.start-end-screen{
+position: absolute;
     top: 0;
     left: 0;
+    z-index: 1000;
     width: 100%;
     height: 100%;
-    background: rgba(20, 20, 20, 0.8);
+    background-image: url('./assets/desert-4258740_1280.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 99;
 }
 
-.game-over-box {
-    background: white;
-    padding: 40px;
+
+.start-buttons {
+    display: flex;
+    gap: 20px;
+}
+
+.start-buttons button {
+    font-size: 20px;
+    padding: 15px 25px;
     border-radius: 10px;
-    text-align: center;
-    box-shadow: 0 0 20px black;
-}
-
-.game-over-box h1 {
-    font-size: 36px;
-    margin-bottom: 20px;
-}
-
-.game-over-box button {
-    font-size: 18px;
-    padding: 10px 20px;
-    margin: 10px;
+    border: none;
+    background-color: #ffae00;
+    color: white;
     cursor: pointer;
+    transition: 0.3s;
+}
+
+.start-buttons button:hover {
+    background-color: #ffcc00;
+}
+
+.symbols{
+    width: 30px;
+    height: 30px;
+}
+
+
+#end-screen.hidden {
+    display: none !important;
+}
+
+#end-screen img {
+    max-width: 50%;
+    height: auto;
+    margin-bottom: 30px;
+}
+
+#end-text {
+    color: white;
+    font-size: 48px;
+    font-family: sans-serif;
+    margin-bottom: 20px;
 }
 
 .hidden {

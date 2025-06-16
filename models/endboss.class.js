@@ -223,8 +223,8 @@ class Endboss extends MovableObject {
         if (this.isDead) return;
 
         this.energy = Math.max(0, this.energy - amount);
+        console.log('⚡ Boss energy nach Treffer:', this.energy);
 
-        // ✅ Immer Statusbar aktualisieren
         if (statusBar) {
             statusBar.setPercentage(this.energy);
         } else if (this.bossHealthBar) {
@@ -236,6 +236,7 @@ class Endboss extends MovableObject {
         this.isStunned = true;
 
         if (this.energy <= 0) {
+            console.log('💀 Energie ist 0 → DIE aufrufen!');
             this.die();
         } else {
             this.playHurtAnimation();
@@ -254,6 +255,8 @@ class Endboss extends MovableObject {
      */
     die() {
         if (this.isDead) return;
+        console.log('☠️ DIE wurde aufgerufen!');
+
         this.isDead = true;
 
         if (this.bossHealthBar) {
@@ -278,5 +281,4 @@ class Endboss extends MovableObject {
             }
         }, 300);
     }
-
 }

@@ -47,3 +47,16 @@ function restartGame() {
 function exitGame() {
   alert("Spiel beendet."); // Oder window.close(); wenn in eigenem Fenster
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+  const startButton = document.getElementById('start-btn');
+  const startScreen = document.getElementById('start-screen');
+  const canvas = document.getElementById('gameCanvas');
+
+  startButton.addEventListener('click', () => {
+    startScreen.classList.add('hidden'); // Verstecke Startscreen
+    canvas.classList.remove('hidden');   // Zeige Spielcanvas
+
+    startGame(); // Starte dein Spiel – z. B. mit deiner init()-Funktion
+  });
+});
