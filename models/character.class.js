@@ -13,6 +13,8 @@ class Character extends MovableObject {
     jumpAnimationRunning = false;
     isHurt = false;
     isDead = false;
+    lastMovementTime = Date.now();     // Merkt sich, wann zuletzt eine Bewegung war
+    isInLongIdle = false;              // Damit nicht doppelt abgespielt wird
 
     /** Timing for damage cooldown */
     lastHitTime = 0;
@@ -40,6 +42,18 @@ class Character extends MovableObject {
         './assets/img_pollo_locco/img/2_character_pepe/1_idle/idle/I-10.png'
     ];
 
+    IMAGES_LONG_IDLE = [
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/long_idle/I-11.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/long_idle/I-12.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/long_idle/I-13.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/long_idle/I-14.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/long_idle/I-15.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/long_idle/I-16.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/long_idle/I-17.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/long_idle/I-18.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/long_idle/I-19.png',
+        './assets/img_pollo_locco/img/2_character_pepe/1_idle/long_idle/I-20.png'
+    ];
 
     IMAGES_WALKING = [
         './assets/img_pollo_locco/img/2_character_pepe/2_walk/W-21.png',
@@ -89,6 +103,7 @@ class Character extends MovableObject {
         this.hurtCooldown = 200; // z. B. 500 ms Schutzzeit
 
         this.loadImages(this.IMAGES_IDLE, () => this.setImage(this.IMAGES_IDLE[0]));
+        this.loadImages(this.IMAGES_LONG_IDLE);
         this.loadImage(this.IMAGE_FALLING);
         this.loadImages(this.IMAGES_WALKING)
         this.loadImages(this.IMAGES_JUMPING);
@@ -105,6 +120,8 @@ class Character extends MovableObject {
         this.isInAir = true;
         this.jumpAnimationRunning = false;
         this.startAnimation(this.IMAGES_JUMPING, 150);
+        this.lastMovementTime = Date.now();
+        this.isInLongIdle = false;
     }
 
     moveRight() {
@@ -112,6 +129,8 @@ class Character extends MovableObject {
         const maxRight = 3500 - this.width;
         if (this.x < maxRight) this.x += this.speed;
         this.otherDirection = false;
+        this.lastMovementTime = Date.now();
+        this.isInLongIdle = false;
     }
 
 
@@ -119,6 +138,8 @@ class Character extends MovableObject {
         if (this.isDead || this.isStunned) return; // <== NEU!
         if (this.x > 0) this.x -= this.speed;
         this.otherDirection = true;
+        this.lastMovementTime = Date.now();
+        this.isInLongIdle = false;
     }
 
     startWalkingAnimation() {
@@ -158,6 +179,36 @@ class Character extends MovableObject {
         }
     }
 
+    checkLongIdleAnimation() {
+        const now = Date.now();
+        if (!this.walking && !this.isDead && !this.isHurt && !this.isInAir && !this.isInLongIdle) {
+            if (now - this.lastMovementTime > 2000) {
+                this.playLongIdleAnimation();
+            }
+        }
+    }
+
+    playLongIdleAnimation() {
+        this.isInLongIdle = true;
+        this.currentImage = 0;
+        clearInterval(this.animationInterval);
+
+        const images = this.IMAGES_LONG_IDLE;
+        let frame = 0;
+
+        this.animationInterval = setInterval(() => {
+            if (frame < images.length) {
+                this.setImage(images[frame]);
+                frame++;
+            } else {
+                clearInterval(this.animationInterval);
+                this.animationInterval = null;
+                this.currentImage = 0;
+                this.isInLongIdle = false;
+                this.setImage(this.IMAGES_IDLE[0]);
+            }
+        }, 150);
+    }
 
     playHurtAnimation() {
         if (this.isDead) return;

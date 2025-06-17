@@ -84,6 +84,8 @@ class World {
     }
 
     updateCharacter() {
+        this.character.checkLongIdleAnimation(); // ✅ korrekt
+
         if (!this.characterCanMove) return;
         if (this.character.isDead || this.character.isStunned || this.character.isHurt) return;
 
@@ -101,6 +103,9 @@ class World {
             this.camera_x = Math.max(this.character.x - 100, 0);
         }
     }
+
+
+    
 
     updateCoins() {
         this.coins = this.coins.filter((coin) => {
