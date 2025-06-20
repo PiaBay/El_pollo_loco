@@ -27,9 +27,19 @@ class World {
         this.throwables = [];
         this.availableBottles = 0;
         this.bossActivated = false;
-        this.characterCanMove = true; // Standard: beweglich
-
+        this.characterCanMove = true;
+        this.preventIdle = false;
+        this.character.world = this; 
         this.loadLevelContent();
+
+        this.jumpSound = new Audio('./assets/audio/jump-up-245782.mp3');
+        this.throwSound = new Audio('./assets/audio/bottle-pop-45531.mp3');
+        this.hurtSound = new Audio('./assets/audio/grunt2-85989.mp3');
+        this.winSound = new Audio('./assets/audio/game-bonus-144751.mp3');
+        this.loseSound = new Audio('./assets/audio/game-over-38511.mp3');
+
+
+
         this.setupKeyboard();
         this.draw();
     }
@@ -72,6 +82,7 @@ class World {
         this.bottleStatusBar.draw(this.ctx);
         this.bossHealthBar.draw(this.ctx);
 
+
         requestAnimationFrame(() => this.draw());
 
         if (this.character.isDead && this.character.y > 500) {
@@ -84,26 +95,25 @@ class World {
     }
 
     updateCharacter() {
-        this.character.checkLongIdleAnimation(); // ✅ korrekt
-
         if (!this.characterCanMove) return;
         if (this.character.isDead || this.character.isStunned || this.character.isHurt) return;
 
+        this.character.checkLongIdleAnimation(this.preventIdle);
+
+
         if (keyboard.RIGHT) {
             this.character.moveRight();
-            this.character.startWalkingAnimation();
         } else if (keyboard.LEFT) {
             this.character.moveLeft();
-            this.character.startWalkingAnimation();
-        } else if (this.character.walking) {
+        } else {
             this.character.stopWalkingAnimation();
         }
+
 
         if (!this.cameraLocked) {
             this.camera_x = Math.max(this.character.x - 100, 0);
         }
     }
-
 
     
 
@@ -140,7 +150,7 @@ class World {
 
     updateBottles() {
         this.bottles = this.bottles.filter((bottle) => {
-            if (bottle.x > this.character.x - 100 && bottle.x < this.character.x + 400) {
+            if (bottle.x > this.character.x - 500 && bottle.x < this.character.x + 800){
                 if (bottle.isCollectedBy(this.character)) {
                     this.collectedBottles++;
                     this.availableBottles++;
@@ -184,15 +194,16 @@ class World {
             this.bossActivated = true;
             this.cameraLocked = true;
             this.characterCanMove = false;
-
+            this.preventIdle = true; // ⛔️ Idle sofort deaktivieren
             this.endboss.onIntroStart = () => {
                 this.chickens = [];
-                console.log('🐔 Chickens entfernt!');
-            };
-
+                this.character.longIdlePermanentlyDisabled = true; // 🧠 Long Idle ab sofort komplett aus!
+                this.preventIdle = true;
+                console.log('🐔 Chickens entfernt & LongIdle deaktiviert!');            };
             this.endboss.onIntroEnd = () => {
                 this.characterCanMove = true;
                 this.cameraLocked = false;
+                this.preventIdle = false; // ✅ Idle wieder erlauben
             };
         }
     }
@@ -203,27 +214,16 @@ class World {
         const boss = this.endboss;
         const pepe = this.character;
 
+        // 🚪 Intro: Boss läuft zur Kampfposition
         if (!boss.introPlayed) {
             boss.moveLeft();
-        } else if (!boss.isHurt && boss.energy > 0) {
-            const dist = pepe.x - boss.x;
-
-            if (Math.abs(dist) > 20) {
-                if (dist < 0) {
-                    boss.x -= boss.speed;
-                    boss.otherDirection = false;
-                } else {
-                    boss.x += boss.speed;
-                    boss.otherDirection = true;
-                }
-
-                boss.startWalkingAnimation();
-            } else {
-                boss.stopWalkingAnimation();
-            }
+        }
+        // 🧠 Kampfphase
+        else {
+            boss.pursueTarget(pepe);
         }
 
-        // 🧲 Gravity nach dem Tod
+        // 🧲 Fallverhalten nach dem Tod
         if (boss.fallAfterDeath) {
             boss.y += boss.velocityY;
             boss.velocityY += boss.gravity;
@@ -231,6 +231,7 @@ class World {
 
         this.addToMap(boss);
     }
+
 
     updateEndbossCamera() {
         if (this.cameraLocked) {
@@ -288,10 +289,12 @@ class World {
 
         if (won) {
             text.innerText = 'You Won!';
-            image.src = './assets/img_pollo_locco/img/You won, you lost/You Win A.png'; // ← dein Bild hier einfügen
+            image.src = './assets/img_pollo_locco/img/You won, you lost/You Win A.png';
+            this.winSound?.play();
         } else {
             text.innerText = 'You Lost!';
-            image.src = './assets/img_pollo_locco/img/You won, you lost/Game Over.png'; // ← dein Bild hier einfügen
+            image.src = './assets/img_pollo_locco/img/You won, you lost/Game Over.png'; 
+            this.loseSound?.play();
         }
 
         screen.classList.remove('hidden');

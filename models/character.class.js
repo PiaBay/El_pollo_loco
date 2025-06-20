@@ -14,7 +14,9 @@ class Character extends MovableObject {
     isHurt = false;
     isDead = false;
     lastMovementTime = Date.now();     // Merkt sich, wann zuletzt eine Bewegung war
-    isInLongIdle = false;              // Damit nicht doppelt abgespielt wird
+    isInLongIdle = false;  
+    longIdlePermanentlyDisabled = false;
+            // Damit nicht doppelt abgespielt wird
 
     /** Timing for damage cooldown */
     lastHitTime = 0;
@@ -100,7 +102,8 @@ class Character extends MovableObject {
         this.width = 120;
         this.height = 240;
         this.lastHitTime = 0;
-        this.hurtCooldown = 200; // z. B. 500 ms Schutzzeit
+        this.hurtCooldown = 200;
+        
 
         this.loadImages(this.IMAGES_IDLE, () => this.setImage(this.IMAGES_IDLE[0]));
         this.loadImages(this.IMAGES_LONG_IDLE);
@@ -116,38 +119,40 @@ class Character extends MovableObject {
     }
     jump() {
         if (this.isDead) return;
+
+        this.interruptIdleAndMarkActive();   // ← Muss zuerst kommen!
         this.velocityY = -5;
         this.isInAir = true;
         this.jumpAnimationRunning = false;
         this.startAnimation(this.IMAGES_JUMPING, 150);
-        this.lastMovementTime = Date.now();
-        this.isInLongIdle = false;
+        if (this.jumpSound) this.jumpSound.play();
     }
-
     moveRight() {
-        if (this.isDead || this.isStunned) return; // <== NEU!
+        if (this.isDead || this.isStunned) return;
+                this.interruptIdleAndMarkActive();
         const maxRight = 3500 - this.width;
         if (this.x < maxRight) this.x += this.speed;
         this.otherDirection = false;
-        this.lastMovementTime = Date.now();
-        this.isInLongIdle = false;
+        this.startWalkingAnimation();
     }
 
-
     moveLeft() {
-        if (this.isDead || this.isStunned) return; // <== NEU!
+        if (this.isDead || this.isStunned) return;
+        this.interruptIdleAndMarkActive();
         if (this.x > 0) this.x -= this.speed;
         this.otherDirection = true;
-        this.lastMovementTime = Date.now();
-        this.isInLongIdle = false;
+        this.startWalkingAnimation();
     }
 
     startWalkingAnimation() {
-        if (this.isDead || (this.walking && this.animationInterval)) return;
+        if (this.isDead) return;
+        if (this.animationInterval) return;
+
         this.walking = true;
-        clearInterval(this.animationInterval);
+        this.currentImage = 0;
         this.startAnimation(this.IMAGES_WALKING, this.animationSpeed);
     }
+
 
     stopWalkingAnimation() {
         if (!this.walking) return;
@@ -165,7 +170,7 @@ class Character extends MovableObject {
         this.lastHitTime = Date.now();
         this.isHurt = true;
         this.isStunned = true;
-
+        if (this.world?.hurtSound) this.world.hurtSound.play();
         if (this.energy <= 0) {
             this.die();
         } else {
@@ -178,8 +183,9 @@ class Character extends MovableObject {
             }, 600);
         }
     }
-
     checkLongIdleAnimation() {
+        if (this.longIdlePermanentlyDisabled) return;
+
         const now = Date.now();
         if (!this.walking && !this.isDead && !this.isHurt && !this.isInAir && !this.isInLongIdle) {
             if (now - this.lastMovementTime > 2000) {
@@ -187,6 +193,7 @@ class Character extends MovableObject {
             }
         }
     }
+
 
     playLongIdleAnimation() {
         this.isInLongIdle = true;
@@ -235,17 +242,19 @@ class Character extends MovableObject {
         }, 150);
     }
 
-
     throwBottle(world) {
         // ⛔️ Nicht werfen, wenn keine Flaschen da oder Boss verletzt ist
         if (world.availableBottles <= 0) return;
         if (world.bossActivated && world.endboss.isHurt) return;
 
+        this.interruptIdleAndMarkActive();
         const bottle = new ThrowableObject(this.x + 30, this.y, this.otherDirection);
         world.throwables.push(bottle);
         world.availableBottles--;
 
         world.bottleStatusBar.setBottles(world.availableBottles, world.totalBottles);
+
+        if (world.throwSound) world.throwSound.play();
     }
 
 
@@ -272,4 +281,38 @@ class Character extends MovableObject {
             }
         }, 300);
     }
+
+    /**
+ * Bricht eine laufende Idle-/Long-Idle-Animation ab
+ * und setzt die Figur als aktiv.
+ */
+    /**
+     * Unterbricht sofort jede laufende Idle-Animation
+     * und markiert die Figur als aktiv.
+     */
+    /**
+     * Unterbricht nur Idle-/Long-Idle-Animationen,
+     * lässt Lauf-/Sprung-Animationen intakt.
+     * @param {boolean} [setIdleImage=true] - Optional zurück zur Idle-Grafik setzen.
+     */
+    interruptIdleAndMarkActive(setIdleImage = true) {
+        this.lastMovementTime = Date.now();
+        this.isInLongIdle = false;
+
+        // NUR abbrechen, wenn es eine Idle-Animation ist
+        if (this.isInLongIdle || (!this.walking && !this.jumpAnimationRunning)) {
+            clearInterval(this.animationInterval);
+            this.animationInterval = null;
+            this.walking = false;
+            this.jumpAnimationRunning = false;
+            this.currentImage = 0;
+
+            if (setIdleImage) {
+                this.setImage(this.IMAGES_IDLE[0]);
+            }
+        }
+    }
+
+
+
 }

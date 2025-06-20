@@ -125,12 +125,22 @@ setImageByIndex(i) {
 */
     startAnimation(imageList, interval = 120) {
         if (this.animationInterval) return;
+
         this.animationInterval = setInterval(() => {
             const i = this.currentImage % imageList.length;
-            this.setImage(imageList[i]);
+            const imgPath = imageList[i];
+
+            const cachedImg = this.imageCache[imgPath];
+            if (cachedImg && cachedImg.complete && cachedImg.naturalWidth > 0) {
+                this.img = cachedImg;
+            } else {
+                console.warn('⚠️ Bild nicht geladen:', imgPath);
+            }
+
             this.currentImage++;
         }, interval);
     }
+
 
 
 /**

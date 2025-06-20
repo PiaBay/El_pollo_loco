@@ -88,7 +88,7 @@ class Endboss extends MovableObject {
         this.speed = 0;
 
         // ➕ Intro-Callback aufrufen (Chickens entfernen)
-        if (typeof this.onIntroStart === 'function') {
+        if (typeof this.onIntroEnd === 'function') {
             this.onIntroStart();
         }
 
@@ -107,6 +107,7 @@ class Endboss extends MovableObject {
                     if (typeof this.onIntroEnd === 'function') {
                         this.onIntroEnd();
                     }
+                    this.speed = 1; 
                 }
             }, 500);
         });
@@ -136,18 +137,19 @@ class Endboss extends MovableObject {
      * Moves the boss to the left (only after landing).
      */
     moveLeft() {
-        if (this.isHurt || this.introPlayed) return;
+        if (this.isHurt) return;
 
         if (!this.walking) this.startWalkingAnimation();
 
         if (this.x > this.introPositionX) {
             this.x -= this.speed;
-        } else if (!this.introPlayed) {
+        } else if (!this.introPlayed && !this.alertInterval) { // NEU: zusätzlich prüfen!
             console.log('🐓 Endboss angekommen');
             this.stopWalkingAnimation();
-            this.startIntroAnimation(); // 🔁 Nur 1x!
+            this.startIntroAnimation();
         }
     }
+
 
 
 
@@ -158,6 +160,29 @@ class Endboss extends MovableObject {
         clearInterval(this.animationInterval);
         this.animationInterval = null;
         this.currentImage = 0;
+    }
+
+
+    checkAttack(character) {
+        console.log('✅ Angriff prüfen...');
+        const distance = Math.abs(this.x - character.x);
+        const attackRange = 80;
+        const now = Date.now();
+
+        if (!this.lastAttackTime) this.lastAttackTime = 0;
+
+        if (
+            distance < attackRange &&
+            !this.isDead &&
+            !this.isHurt &&
+            !this.isStunned &&
+            now - this.lastAttackTime > 1000 // nur 1× pro Sekunde
+        ) {
+            console.log('⚔️ Boss greift an!');
+            this.startAttacking();
+            character.takeDamage(20); // deine Methode im Character
+            this.lastAttackTime = now;
+        }
     }
 
 
@@ -210,8 +235,11 @@ class Endboss extends MovableObject {
                 this.currentImage = 0;
                 this.setImage(this.IMAGES_WALKING[0]);
                 this.walking = false;
-                this.startWalkingAnimation();
-                this.startAttacking();
+                // ✅ Flags sauber zurücksetzen – erst jetzt!
+                this.isHurt = false;
+                this.isStunned = false;
+
+                this.startWalkingAnimation(); // oder nur wenn nötig
             }
         }, 300);
     }
@@ -240,13 +268,36 @@ class Endboss extends MovableObject {
             this.die();
         } else {
             this.playHurtAnimation();
-            setTimeout(() => {
-                this.isHurt = false;
-                this.isStunned = false;
-            }, 600);
+
         }
     }
 
+    /**
+     * Steuert die Bewegung des Endbosses auf das Ziel zu.
+     * @param {Character} character - Die Spielfigur (z. B. Pepe)
+     */
+    pursueTarget(character) {
+        // Nur wenn Boss aktiv ist
+        if (this.isDead || this.isHurt || this.isStunned || this.energy <= 0) return;
+
+        const dist = character.x - this.x;
+
+        if (Math.abs(dist) > 20) {
+            if (dist < 0) {
+                this.x -= this.speed;
+                this.otherDirection = false;
+            } else {
+                this.x += this.speed;
+                this.otherDirection = true;
+            }
+
+            this.startWalkingAnimation();
+        } else {
+            this.stopWalkingAnimation();
+        }
+
+        this.checkAttack(character);
+    }
 
 
 
