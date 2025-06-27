@@ -45,9 +45,16 @@ class World {
         this.chickenSound = new Audio('./audio/chicken-noise-228106.mp3');
         this.bossHitSound = new Audio('./audio/roaster-crows-2-363352.mp3');
         this.bossIntroSound = new Audio('./audio/dark-drone-351092.mp3');
+        this.backgroundMusic = new Audio('./audio/rhythm-of-samba-326623.mp3');
+        this.backgroundMusic.loop = true; // 🎵 Endlosschleife
+        this.backgroundMusic.volume = 0.3; // 🔉 Lautstärke anpassen (0 = stumm, 1 = voll)
 
 
         this.setupKeyboard();
+        this.backgroundMusic.play().catch((e) => {
+            console.warn('🔇 Hintergrundmusik konnte nicht automatisch starten:', e);
+        });
+
         this.draw();
     }
 
@@ -352,7 +359,10 @@ class World {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
-
+        if (this.backgroundMusic) {
+            this.backgroundMusic.pause();
+            this.backgroundMusic.currentTime = 0;
+        }
         this.characterCanMove = false;
         this.cameraLocked = true;
 
