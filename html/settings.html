@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Einstellungen</title>
+        <link class="fav-icon" rel="icon" href="../assets/img_pollo_locco/img/3_enemies_chicken/chicken_small/1_walk/2_w.png">
+
+        <link rel="stylesheet" href="../styles/additional.css">
+                        <link rel="stylesheet" href="../styles/font.css">
+
+    <script src="../js/game.js"></script>
+</head>
+
+<body class="body">
+
+    <div class="button-bar">
+        <button onclick="window.location.href='index.html'">← Zurück</button>
+    </div>
+
+    <h1>Einstellungen</h1>
+
+    <div class="instruction">
+        <h3>Audio</h3>
+
+        <label>
+            <input type="checkbox" id="music-toggle" />
+            Musik aktivieren
+        </label>
+        <br />
+        <label>
+            <input type="checkbox" id="sound-toggle" />
+            Spieltöne aktivieren
+        </label>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const music = document.getElementById('music-toggle');
+            const sound = document.getElementById('sound-toggle');
+
+            // Lade gespeicherte Einstellungen
+            music.checked = localStorage.getItem('musicEnabled') === 'true';
+            sound.checked = localStorage.getItem('soundEnabled') === 'true';
+
+            // Einstellungen speichern
+            music.addEventListener('change', () => {
+                localStorage.setItem('musicEnabled', music.checked);
+            });
+
+            sound.addEventListener('change', () => {
+                localStorage.setItem('soundEnabled', sound.checked);
+            });
+        });
+    </script>
+
+</body>
+
+</html>

@@ -38,8 +38,8 @@ class World {
         this.jumpSound = new Audio('./audio/jump-up-245782.mp3');
         this.throwSound = new Audio('./audio/bottle-pop-45531.mp3');
         this.hurtSound = new Audio('./audio/grunt2-85989.mp3');
-        this.winSound = new Audio('./audio/game-bonus-144751.mp3');
-        this.loseSound = new Audio('./audio/game-over-38511.mp3');
+        this.winSound = new Audio('./audio/spanish-motifs-329486.mp3');
+        this.loseSound = new Audio('./audio/to-you-valladolid-254757.mp3');
         this.bottlePickupSound = new Audio('./audio/bottle-205353.mp3');
         this.coinSound = new Audio('./audio/coins-135571.mp3');
         this.chickenSound = new Audio('./audio/chicken-noise-228106.mp3');
@@ -48,7 +48,10 @@ class World {
         this.backgroundMusic = new Audio('./audio/rhythm-of-samba-326623.mp3');
         this.backgroundMusic.loop = true; // 🎵 Endlosschleife
         this.backgroundMusic.volume = 0.3; // 🔉 Lautstärke anpassen (0 = stumm, 1 = voll)
-
+        if (localStorage.getItem('musicEnabled') === 'true') {
+            this.backgroundMusic.volume = 0.3;
+            this.backgroundMusic.play();
+        }
 
         this.setupKeyboard();
         this.backgroundMusic.play().catch((e) => {
@@ -139,9 +142,9 @@ class World {
             if (coin.isCollectedBy(this.character)) {
                 this.collectedCoins++;
                 this.coinStatusBar.setCoins(this.collectedCoins, this.totalCoins);
-
-                // 🔊 Soundeffekt abspielen
-                this.coinSound?.play();
+                if (localStorage.getItem('soundEnabled') === 'true') {
+                    this.coinSound?.play();
+                                }               
 
                 return false;
             }
@@ -158,7 +161,9 @@ class World {
 
                 if (fromAbove) {
                     this.character.velocityY = -3;
-                    this.chickenSound?.play();
+                    if (localStorage.getItem('soundEnabled') === 'true') {
+                        this.chickenSound?.play();
+                    }
                     return false;
                 } else if (this.character.canTakeDamage()) {
                     this.character.takeDamage(20);
@@ -194,7 +199,9 @@ class World {
             const collides = this.endboss && this.endboss.isColliding(bottle);
 
             if (this.bossActivated && collides) {
-                this.bossHitSound?.play();
+                if (localStorage.getItem('soundEnabled') === 'true') {
+                    this.bossHitSound?.play();
+                }
                 this.endboss.hit(30, this.bossHealthBar); // 30 = Schaden
                 return false;
             }

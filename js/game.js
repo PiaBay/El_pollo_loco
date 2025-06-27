@@ -50,10 +50,29 @@ function exitGame() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  // Spielstart auf index.html
+  const backgroundMusic = new Audio('./audio/spanish-guitar-208363.mp3');
+  backgroundMusic.loop = true;
+  backgroundMusic.volume = 0.4;
+
+  let musicStarted = false;
+
+  function startMusicOnce() {
+    if (!musicStarted) {
+      backgroundMusic.play().catch((e) => {
+        console.warn('🎵 Musik konnte nicht automatisch abgespielt werden:', e);
+      });
+      musicStarted = true;
+    }
+  }
+
+  // Erste Benutzeraktion löst Musikstart aus (Klick irgendwo auf der Seite)
+  document.addEventListener('click', startMusicOnce, { once: true });
+  document.addEventListener('keydown', startMusicOnce, { once: true });
+
   const startButton = document.getElementById('start-btn');
   const startScreen = document.getElementById('start-screen');
   const canvas = document.getElementById('gameCanvas');
+
   if (startButton && startScreen && canvas) {
     startButton.addEventListener('click', () => {
       startScreen.classList.add('hidden');
@@ -61,7 +80,7 @@ window.addEventListener('DOMContentLoaded', () => {
       startGame();
     });
   }
-
+});
   // Neustart auf anderen Seiten
   const restartButton = document.getElementById('restart-btn');
   if (restartButton) {
@@ -70,8 +89,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ggf. mehr Funktionen hier hinzufügen
-});
+
 
 function goBack() {
   // Beispiel: Zurück zum Startbildschirm oder andere Seite
