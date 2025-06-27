@@ -17,11 +17,13 @@ class Bottle extends MovableObject {
     }
 
     isCollectedBy(character) {
-        const offset = 20; // ← kleiner machen = präzisere Kollision
+        const offset = 10; // optional – macht es etwas großzügiger
 
-        return character.x + character.width > this.x &&
-            character.x < this.x + this.width &&
-            character.y + character.height > this.y &&
-            character.y < this.y + this.height;
+        return (
+            this.x + this.width > character.x + offset &&
+            this.x < character.x + character.width - offset &&
+            this.y + this.height > character.y + offset &&
+            this.y < character.y + character.height - offset
+        );
     }
 }

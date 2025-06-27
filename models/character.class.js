@@ -282,14 +282,7 @@ class Character extends MovableObject {
         }, 300);
     }
 
-    /**
- * Bricht eine laufende Idle-/Long-Idle-Animation ab
- * und setzt die Figur als aktiv.
- */
-    /**
-     * Unterbricht sofort jede laufende Idle-Animation
-     * und markiert die Figur als aktiv.
-     */
+
     /**
      * Unterbricht nur Idle-/Long-Idle-Animationen,
      * lässt Lauf-/Sprung-Animationen intakt.

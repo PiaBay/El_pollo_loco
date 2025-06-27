@@ -30,7 +30,8 @@ class World {
         this.characterCanMove = true;
         this.preventIdle = false;
         this.gameOverHandled = false;
-
+        this.availableBottles = 0;
+        this.maxBottleCapacity = 30; // oder was du willst
         this.character.world = this; 
         this.loadLevelContent();
 
@@ -39,7 +40,11 @@ class World {
         this.hurtSound = new Audio('./audio/grunt2-85989.mp3');
         this.winSound = new Audio('./audio/game-bonus-144751.mp3');
         this.loseSound = new Audio('./audio/game-over-38511.mp3');
-
+        this.bottlePickupSound = new Audio('./audio/bottle-205353.mp3');
+        this.coinSound = new Audio('./audio/coins-135571.mp3');
+        this.chickenSound = new Audio('./audio/chicken-noise-228106.mp3');
+        this.bossHitSound = new Audio('./audio/roaster-crows-2-363352.mp3');
+        this.bossIntroSound = new Audio('./audio/dark-drone-351092.mp3');
 
 
         this.setupKeyboard();
@@ -53,6 +58,8 @@ class World {
         this.clouds = level1.clouds;
         this.endboss = level1.endboss;
         this.endboss.bossHealthBar = this.bossHealthBar;
+        this.endboss.world = this;
+
 }
 
     draw() {
@@ -120,12 +127,15 @@ class World {
     }
 
     
-
     updateCoins() {
         this.coins = this.coins.filter((coin) => {
             if (coin.isCollectedBy(this.character)) {
                 this.collectedCoins++;
                 this.coinStatusBar.setCoins(this.collectedCoins, this.totalCoins);
+
+                // 🔊 Soundeffekt abspielen
+                this.coinSound?.play();
+
                 return false;
             }
             return true;
@@ -141,6 +151,7 @@ class World {
 
                 if (fromAbove) {
                     this.character.velocityY = -3;
+                    this.chickenSound?.play();
                     return false;
                 } else if (this.character.canTakeDamage()) {
                     this.character.takeDamage(20);
@@ -154,13 +165,16 @@ class World {
 
     updateBottles() {
         this.bottles = this.bottles.filter((bottle) => {
-            if (bottle.x > this.character.x - 500 && bottle.x < this.character.x + 800){
-                if (bottle.isCollectedBy(this.character)) {
-                    this.collectedBottles++;
-                    this.availableBottles += 5;
-                    this.bottleStatusBar.setBottles(this.availableBottles, this.totalBottles);
-                    return false;
-                }
+            if (bottle.isCollectedBy(this.character)) {
+                this.collectedBottles += 5;  // 🔼 Diese Zeile ergänzt die Gesamtanzahl
+                this.availableBottles += 5;
+
+                this.bottleStatusBar.setBottles(this.availableBottles, this.maxBottleCapacity);
+                console.log('Available:', this.availableBottles);
+                this.bottlePickupSound?.play();
+                console.log('✅ Flasche eingesammelt bei y:', bottle.y);
+
+                return false; // Flasche aus der Liste entfernen
             }
             return true;
         });
@@ -171,10 +185,9 @@ class World {
             bottle.move();
 
             const collides = this.endboss && this.endboss.isColliding(bottle);
-            console.log('🧪 Flasche:', bottle.x, 'Boss:', this.endboss.x, '→ Kollision:', collides);
 
             if (this.bossActivated && collides) {
-                console.log('💥 Flasche trifft Boss!');
+                this.bossHitSound?.play();
                 this.endboss.hit(30, this.bossHealthBar); // 30 = Schaden
                 return false;
             }
@@ -196,6 +209,8 @@ class World {
     checkEndbossActivation() {
         if (!this.bossActivated && this.character.x > 2200) {
             this.bossActivated = true;
+            this.bossIntroSound?.play(); // 🔊 Intro-Sound abspielen
+
             this.cameraLocked = true;
             this.characterCanMove = false;
             this.preventIdle = true; // ⛔️ Idle sofort deaktivieren
@@ -203,7 +218,7 @@ class World {
                 this.chickens = [];
                 this.character.longIdlePermanentlyDisabled = true; // 🧠 Long Idle ab sofort komplett aus!
                 this.preventIdle = true;
-                console.log('🐔 Chickens entfernt & LongIdle deaktiviert!');            };
+              };
             this.endboss.onIntroEnd = () => {
                 this.characterCanMove = true;
                 this.cameraLocked = false;
@@ -271,12 +286,12 @@ class World {
             if (e.key === 'ArrowUp' && !this.character.isInAir) {
                 this.jumpSound?.play(); // Sound hier
                 this.character.jump();
-            }            if (e.key === ' ' && this.availableBottles > 0) {
+            }  
+            if (e.key === ' ' && this.availableBottles > 0) {
                 this.character.throwBottle(this);
                 this.availableBottles--;
 
-                // 🟡 Statusbar aktualisieren
-                this.bottleStatusBar.setBottles(this.availableBottles, this.totalBottles);
+                this.bottleStatusBar.setBottles(this.availableBottles, this.maxBottleCapacity);
             }
         });
 
@@ -286,30 +301,25 @@ class World {
         });
     }
 
-
     checkEndConditions() {
         if (this.character.isDead && this.character.y > 500 && !this.gameOverHandled) {
-            this.handleGameEnd(false); // verloren
+            console.log('💀 Character tot – Spiel verloren');
+            this.handleGameEnd(false);
             return true;
         }
 
         if (this.endboss?.isDead && this.endboss.y > 500 && !this.gameOverHandled) {
-            this.handleGameEnd(true); // gewonnen
+            console.log('🏆 Endboss besiegt – Spiel gewonnen');
+            this.handleGameEnd(true);
             return true;
         }
 
-        return false; // weiterzeichnen
+        return false;
     }
-
 
     handleGameEnd(won) {
         this.gameOverHandled = true;
-        this.stopGameLoop();
-
-        // Zeige Endscreen minimal verzögert
-        setTimeout(() => {
-            this.showEndScreen(won);
-        }, 50);
+        this.showEndScreen(won); // Jetzt wird der Endscreen wirklich angezeigt
     }
 
 
@@ -318,12 +328,11 @@ class World {
  * @param {boolean} won - True if player won, false if lost
  */
     showEndScreen(won) {
-        this.stopGameLoop(); // 🔴 Spiel sofort anhalten!
-
+        
         const screen = document.getElementById('end-screen');
         const text = document.getElementById('end-text');
         const image = document.getElementById('end-image');
-
+        
         if (won) {
             text.innerText = 'You Won!';
             image.src = './assets/img_pollo_locco/img/You won, you lost/You Win A.png';
@@ -333,6 +342,7 @@ class World {
             image.src = './assets/img_pollo_locco/img/You won, you lost/Game Over.png';
             this.loseSound?.play();
         }
+        this.stopGameLoop(); // 🔴 Spiel sofort anhalten!
 
         screen.classList.remove('hidden');
     }

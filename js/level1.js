@@ -24,7 +24,7 @@ function createCoins() {
 
 function createBottles() {
     return [
-        new Bottle(300, 360),
+        new Bottle(300, 280),
         new Bottle(780, 120),
         new Bottle(1050, 350),
         new Bottle(1280, 120),

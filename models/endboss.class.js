@@ -163,30 +163,6 @@ class Endboss extends MovableObject {
     }
 
 
-    checkAttack(character) {
-        console.log('✅ Angriff prüfen...');
-        const distance = Math.abs(this.x - character.x);
-        const attackRange = 80;
-        const now = Date.now();
-
-        if (!this.lastAttackTime) this.lastAttackTime = 0;
-
-        if (
-            distance < attackRange &&
-            !this.isDead &&
-            !this.isHurt &&
-            !this.isStunned &&
-            now - this.lastAttackTime > 1000 // nur 1× pro Sekunde
-        ) {
-            console.log('⚔️ Boss greift an!');
-            this.startAttacking();
-            character.takeDamage(20); // deine Methode im Character
-            this.lastAttackTime = now;
-        }
-    }
-
-
-
     startAttacking() {
         if (this.attackInterval) return;
 
@@ -299,6 +275,33 @@ class Endboss extends MovableObject {
         this.checkAttack(character);
     }
 
+    checkAttack(character) {
+        const distance = Math.abs(this.x - character.x);
+        const attackRange = 80;
+        const now = Date.now();
+
+        if (!this.lastAttackTime) this.lastAttackTime = 0;
+
+        if (
+            distance < attackRange &&
+            !this.isDead &&
+            !this.isHurt &&
+            !this.isStunned &&
+            now - this.lastAttackTime > 1000 // nur 1x pro Sekunde
+        ) {
+            console.log('⚔️ Endboss greift an!');
+            this.startAttacking();
+            character.takeDamage(20);
+            this.lastAttackTime = now;
+
+            // ✅ Statusbar von Pepe aktualisieren
+            if (this.world?.statusBar) {
+                this.world.statusBar.setEnergy(character.energy);
+            }
+
+            console.log('💥 Endboss hat Pepe getroffen. Energie:', character.energy);
+        }
+    }
 
 
     /**

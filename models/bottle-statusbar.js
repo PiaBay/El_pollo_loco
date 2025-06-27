@@ -35,7 +35,7 @@ class BottleStatusBar extends MovableObject {
      * @param {number} percentage - Value from 0 to 100
      */
     setPercentage(percentage) {
-        let index = Math.round(percentage / 40);
+        let index = Math.floor(percentage / 20);
         if (index >= this.IMAGES.length) index = this.IMAGES.length - 1;
         const path = this.IMAGES[index];
         this.img = this.imageCache[path];
