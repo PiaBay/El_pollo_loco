@@ -332,4 +332,24 @@ class Endboss extends MovableObject {
             }
         }, 300);
     }
+
+    freeze() {
+        console.log('🧊 Endboss eingefroren!');
+
+        // Alle laufenden Intervalle stoppen
+        clearInterval(this.alertInterval);
+        clearInterval(this.animationInterval);
+        clearInterval(this.attackInterval);
+
+        this.alertInterval = null;
+        this.animationInterval = null;
+        this.attackInterval = null;
+
+        // Bewegung & Aktionen blockieren
+        this.isStunned = true;
+        this.isHurt = false;
+        this.walking = false;
+        this.freeze = true; // optional für weitere Abfragen
+    }
+
 }

@@ -1,3 +1,4 @@
+
 const keyboard = {
   LEFT: false,
   RIGHT: false,
@@ -13,15 +14,15 @@ const keyboard = {
  * @returns {CanvasRenderingContext2D}
  */
 function adjustCanvasForHDPI(canvas) {
-    const ratio = window.devicePixelRatio || 1;
-    canvas.width = 720 * ratio;
-    canvas.height = 480 * ratio;
-    canvas.style.width = '720px';
-    canvas.style.height = '480px';
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = 720 * ratio;
+  canvas.height = 480 * ratio;
+  canvas.style.width = '720px';
+  canvas.style.height = '480px';
 
-    const ctx = canvas.getContext('2d');
-    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-    return ctx;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  return ctx;
 }
 
 
@@ -49,21 +50,32 @@ function exitGame() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  // Spielstart auf index.html
   const startButton = document.getElementById('start-btn');
   const startScreen = document.getElementById('start-screen');
   const canvas = document.getElementById('gameCanvas');
+  if (startButton && startScreen && canvas) {
+    startButton.addEventListener('click', () => {
+      startScreen.classList.add('hidden');
+      canvas.classList.remove('hidden');
+      startGame();
+    });
+  }
 
-  startButton.addEventListener('click', () => {
-    startScreen.classList.add('hidden'); // Verstecke Startscreen
-    canvas.classList.remove('hidden');   // Zeige Spielcanvas
+  // Neustart auf anderen Seiten
+  const restartButton = document.getElementById('restart-btn');
+  if (restartButton) {
+    restartButton.addEventListener('click', () => {
+      location.href = '../index.html';
+    });
+  }
 
-    startGame(); // Starte dein Spiel – z. B. mit deiner init()-Funktion
-  });
+  // ggf. mehr Funktionen hier hinzufügen
 });
 
 function goBack() {
   // Beispiel: Zurück zum Startbildschirm oder andere Seite
-  window.location.href = '../index.html'; 
+  window.location.href = '../index.html';
 }
 
 function wentBack() {

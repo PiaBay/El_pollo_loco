@@ -29,14 +29,16 @@ class World {
         this.bossActivated = false;
         this.characterCanMove = true;
         this.preventIdle = false;
+        this.gameOverHandled = false;
+
         this.character.world = this; 
         this.loadLevelContent();
 
-        this.jumpSound = new Audio('./assets/audio/jump-up-245782.mp3');
-        this.throwSound = new Audio('./assets/audio/bottle-pop-45531.mp3');
-        this.hurtSound = new Audio('./assets/audio/grunt2-85989.mp3');
-        this.winSound = new Audio('./assets/audio/game-bonus-144751.mp3');
-        this.loseSound = new Audio('./assets/audio/game-over-38511.mp3');
+        this.jumpSound = new Audio('./audio/jump-up-245782.mp3');
+        this.throwSound = new Audio('./audio/bottle-pop-45531.mp3');
+        this.hurtSound = new Audio('./audio/grunt2-85989.mp3');
+        this.winSound = new Audio('./audio/game-bonus-144751.mp3');
+        this.loseSound = new Audio('./audio/game-over-38511.mp3');
 
 
 
@@ -54,12 +56,24 @@ class World {
 }
 
     draw() {
+        if (this.checkEndConditions()) return;
+
         this.character.applyGravity();
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         this.ctx.save();
         this.ctx.translate(-this.camera_x, 0);
 
+        this.drawWorldElements(); // ⬅️ ausgelagert
+
+        this.ctx.restore();
+
+        this.drawStatusBars();    // ⬅️ ausgelagert
+
+        this.animationFrameId = requestAnimationFrame(() => this.draw());
+    }
+
+    drawWorldElements() {
         this.addObjectsToMap(this.backgroundObjects);
         this.updateEnemies();
         this.updateCharacter();
@@ -74,24 +88,14 @@ class World {
         this.throwables.forEach(b => b.move());
         this.addObjectsToMap(this.chickens);
         this.updateThrowables();
+    }
 
-        this.ctx.restore();
 
+    drawStatusBars() {
         this.statusBar.draw(this.ctx);
         this.coinStatusBar.draw(this.ctx);
         this.bottleStatusBar.draw(this.ctx);
         this.bossHealthBar.draw(this.ctx);
-
-
-        requestAnimationFrame(() => this.draw());
-
-        if (this.character.isDead && this.character.y > 500) {
-            this.showEndScreen(false); // ❌ You Lost
-        }
-
-        if (this.endboss?.isDead && this.endboss.y > 500) {
-            this.showEndScreen(true);  // ✅ You Won
-        }
     }
 
     updateCharacter() {
@@ -153,7 +157,7 @@ class World {
             if (bottle.x > this.character.x - 500 && bottle.x < this.character.x + 800){
                 if (bottle.isCollectedBy(this.character)) {
                     this.collectedBottles++;
-                    this.availableBottles++;
+                    this.availableBottles += 5;
                     this.bottleStatusBar.setBottles(this.availableBottles, this.totalBottles);
                     return false;
                 }
@@ -171,7 +175,7 @@ class World {
 
             if (this.bossActivated && collides) {
                 console.log('💥 Flasche trifft Boss!');
-                this.endboss.hit(35, this.bossHealthBar); // 30 = Schaden
+                this.endboss.hit(30, this.bossHealthBar); // 30 = Schaden
                 return false;
             }
 
@@ -264,10 +268,15 @@ class World {
             if (this.character.isStunned) return;
             if (e.key === 'ArrowRight') keyboard.RIGHT = true;
             if (e.key === 'ArrowLeft') keyboard.LEFT = true;
-            if (e.key === 'ArrowUp' && !this.character.isInAir) this.character.jump();
-            if (e.key === ' ' && this.availableBottles > 0) {
+            if (e.key === 'ArrowUp' && !this.character.isInAir) {
+                this.jumpSound?.play(); // Sound hier
+                this.character.jump();
+            }            if (e.key === ' ' && this.availableBottles > 0) {
                 this.character.throwBottle(this);
                 this.availableBottles--;
+
+                // 🟡 Statusbar aktualisieren
+                this.bottleStatusBar.setBottles(this.availableBottles, this.totalBottles);
             }
         });
 
@@ -278,11 +287,39 @@ class World {
     }
 
 
+    checkEndConditions() {
+        if (this.character.isDead && this.character.y > 500 && !this.gameOverHandled) {
+            this.handleGameEnd(false); // verloren
+            return true;
+        }
+
+        if (this.endboss?.isDead && this.endboss.y > 500 && !this.gameOverHandled) {
+            this.handleGameEnd(true); // gewonnen
+            return true;
+        }
+
+        return false; // weiterzeichnen
+    }
+
+
+    handleGameEnd(won) {
+        this.gameOverHandled = true;
+        this.stopGameLoop();
+
+        // Zeige Endscreen minimal verzögert
+        setTimeout(() => {
+            this.showEndScreen(won);
+        }, 50);
+    }
+
+
     /**
  * Shows the final game screen with image and text.
  * @param {boolean} won - True if player won, false if lost
  */
     showEndScreen(won) {
+        this.stopGameLoop(); // 🔴 Spiel sofort anhalten!
+
         const screen = document.getElementById('end-screen');
         const text = document.getElementById('end-text');
         const image = document.getElementById('end-image');
@@ -293,11 +330,33 @@ class World {
             this.winSound?.play();
         } else {
             text.innerText = 'You Lost!';
-            image.src = './assets/img_pollo_locco/img/You won, you lost/Game Over.png'; 
+            image.src = './assets/img_pollo_locco/img/You won, you lost/Game Over.png';
             this.loseSound?.play();
         }
 
         screen.classList.remove('hidden');
     }
+
+    stopGameLoop() {
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+
+        this.characterCanMove = false;
+        this.cameraLocked = true;
+
+        // Tasteneingaben blockieren
+        keyboard.RIGHT = false;
+        keyboard.LEFT = false;
+
+        // Endboss stoppen
+        if (this.endboss) {
+            this.endboss.freeze();  // 🧊 <– HIER wird alles gestoppt
+        }
+
+        console.log('🛑 Spiel gestoppt.');
+    }
+
 
 }
