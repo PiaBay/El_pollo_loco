@@ -38,6 +38,7 @@ function startGame() {
     character.setImage(character.IMAGES_WALKING[0]);
     character.startWalkingAnimation();
     world = new World(canvas, ctx, character);
+    world.loadSounds();
     applyAudioSettings(); // Musik bei Spielstart einstellen
   });
 }
@@ -102,9 +103,16 @@ function initStartButton() {
 
   if (startButton && startScreen && canvas) {
     startButton.addEventListener('click', () => {
+      // Menü-Musik beenden, falls sie läuft
+      if (window.backgroundMusic && !window.backgroundMusic.paused) {
+        window.backgroundMusic.pause();
+        window.backgroundMusic.currentTime = 0;
+      }
+
       startScreen.classList.add('hidden');
       canvas.classList.remove('hidden');
-      startGame();
+
+      startGame(); // <- ruft intern applyAudioSettings auf (z. B. in init())
     });
   }
 }
@@ -124,7 +132,6 @@ function pauseGame() {
   if (world && world.stopGameLoop) {
     world.stopGameLoop();
   }
-  // Eingaben blockieren
   keyboard.LEFT = false;
   keyboard.RIGHT = false;
   keyboard.UP = false;
@@ -140,21 +147,22 @@ function resumeGame() {
 }
 
 function applyAudioSettings() {
-  if (!world) return;
-
   const musicEnabled = localStorage.getItem('musicEnabled') === 'true';
   const soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
 
-  world.musicEnabled = musicEnabled;
-  world.soundEnabled = soundEnabled;
+  if (world) {
+    world.musicEnabled = musicEnabled;
+    world.soundEnabled = soundEnabled;
 
-  if (world.backgroundMusic) {
-    if (musicEnabled) {
-      world.backgroundMusic.muted = false;
-      world.backgroundMusic.play().catch(() => { });
-    } else {
-      world.backgroundMusic.pause();
-      world.backgroundMusic.muted = true;
+    if (world.backgroundMusic) {
+      if (musicEnabled) {
+        world.backgroundMusic.muted = false;
+        world.backgroundMusic.play().catch(() => { });
+      } else {
+        world.backgroundMusic.pause();
+        world.backgroundMusic.muted = true;
+        world.backgroundMusic.currentTime = 0;
+      }
     }
   }
 
@@ -170,7 +178,6 @@ function applyAudioSettings() {
   }
 }
 
-// ⬇️ Das hinzufügen – damit settings.html es aufrufen kann
 window.applyAudioSettings = applyAudioSettings;
 
 window.addEventListener('DOMContentLoaded', () => {

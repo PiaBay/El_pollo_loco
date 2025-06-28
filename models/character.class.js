@@ -126,9 +126,7 @@ class Character extends MovableObject {
         this.jumpAnimationRunning = false;
         this.startAnimation(this.IMAGES_JUMPING, 150);
 
-        if (this.world?.playSound) {
-            this.world.playSound(this.jumpSound);
-        }
+
     }
     moveRight() {
         if (this.isDead || this.isStunned) return;
@@ -173,13 +171,15 @@ class Character extends MovableObject {
         this.lastHitTime = Date.now();
         this.isHurt = true;
         this.isStunned = true;
-        if (this.world?.hurtSound) this.world.hurtSound.play();
+        if (localStorage.getItem('soundEnabled') === 'true') {
+            this.world.playSound(this.world.hurtSound);
+        }               
+
         if (this.energy <= 0) {
             this.die();
         } else {
             this.playHurtAnimation();
 
-            // Immer nach 600ms Entsperren – unabhängig davon, ob Animation sauber lief
             setTimeout(() => {
                 this.isHurt = false;
                 this.isStunned = false;

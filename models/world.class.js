@@ -17,7 +17,8 @@ class World {
         this.coinStatusBar = new coinStatusBar();
         this.bottleStatusBar = new BottleStatusBar();
         this.bossHealthBar = new EndbossStatusBar();
-
+        this.showBossHealthBar = false;
+        this.gameOverHandled = false;
         this.bottles = level1.bottles;
         this.coins = level1.coins;
         this.totalBottles = this.bottles.length;
@@ -34,7 +35,6 @@ class World {
         this.character.world = this;
 
         this.loadSounds();
-        this.applyAudioPreferences();
         this.setupKeyboard();
         this.loadLevelContent();
         this.soundEnabled = localStorage.getItem('soundEnabled') !== 'false'; // default: true
@@ -53,7 +53,8 @@ class World {
         this.chickenSound = new Audio('./audio/chicken-noise-228106.mp3');
         this.bossHitSound = new Audio('./audio/roaster-crows-2-363352.mp3');
         this.bossIntroSound = new Audio('./audio/dark-drone-351092.mp3');
-        this.backgroundMusic = new Audio('./audio/rhythm-of-samba-326623.mp3');
+        this.bossAttackSound = new Audio('./audio/dragon-growl-364483.mp3')
+        this.backgroundMusic = new Audio('./audio/spanish-motifs-329486.mp3');
         this.backgroundMusic.loop = true;
         this.backgroundMusic.volume = 0.3;
     }
@@ -75,14 +76,10 @@ class World {
         this.backgroundObjects = level1.backgroundObjects;
         this.chickens = level1.enemies;
         this.clouds = level1.clouds;
-        this.endboss = level1.endboss;
-        this.endboss.bossHealthBar = this.bossHealthBar;
-        this.endboss.world = this;
-
 }
 
     draw() {
-        if (this.checkEndConditions()) return;
+        if (this.gameOverHandled) return;
 
         this.character.applyGravity();
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -100,12 +97,17 @@ class World {
     }
 
     drawWorldElements() {
+
         this.addObjectsToMap(this.backgroundObjects);
         this.updateEnemies();
+
         this.updateCharacter();
         this.updateCoins();
         this.updateBottles();
-        this.handleEndboss();
+        this.handleEndboss();  // 👈 Endboss vor Spiel-Ende prüfen
+
+        if (this.checkEndConditions()) return;
+
         this.addToMap(this.character);
         this.addObjectsToMap(this.clouds);
         this.addObjectsToMap(this.coins);
@@ -114,14 +116,20 @@ class World {
         this.throwables.forEach(b => b.move());
         this.addObjectsToMap(this.chickens);
         this.updateThrowables();
+        if (this.bossActivated && this.endboss && !this.gameOverHandled) {
+            this.addToMap(this.endboss);
+        }
     }
+
 
 
     drawStatusBars() {
         this.statusBar.draw(this.ctx);
         this.coinStatusBar.draw(this.ctx);
         this.bottleStatusBar.draw(this.ctx);
-        this.bossHealthBar.draw(this.ctx);
+        if (this.showBossHealthBar && this.bossHealthBar) {
+            this.bossHealthBar.draw(this.ctx);
+        }    
     }
 
     updateCharacter() {
@@ -219,36 +227,53 @@ class World {
 
 
     handleEndboss() {
-        if (!this.endboss) return;
+        console.log('[handleEndboss] aufgerufen, bossActivated:', this.bossActivated, '| character.x:', this.character.x);
 
+        // ⬇️ Erst prüfen, ob Endboss aktiviert werden soll:
         this.checkEndbossActivation();
+
+        // ⬇️ Wenn kein Boss existiert, trotzdem hier rausgehen:
+        if (!this.endboss || this.gameOverHandled) return;
+
         this.updateEndbossBehavior();
         this.updateEndbossCamera();
     }
 
+
+
     checkEndbossActivation() {
+        console.log('🧨 Endboss aktiviert!');
+        if (this.gameOverHandled) return;
         if (!this.bossActivated && this.character.x > 2200) {
+            this.endboss = new Endboss(); // 🆕 Boss wird hier erstellt
+            this.endboss.bossHealthBar = this.bossHealthBar;
+            this.endboss.world = this;
             this.bossActivated = true;
+            this.showBossHealthBar = true; // ✅ Statusbar jetzt anzeigen
+
             this.playSound(this.bossIntroSound);
             this.cameraLocked = true;
             this.characterCanMove = false;
-            this.preventIdle = true; // ⛔️ Idle sofort deaktivieren
+            this.preventIdle = true;
+
             this.endboss.onIntroStart = () => {
                 this.chickens = [];
-                this.character.longIdlePermanentlyDisabled = true; // 🧠 Long Idle ab sofort komplett aus!
+                this.character.longIdlePermanentlyDisabled = true;
                 this.preventIdle = true;
-              };
+            };
+
             this.endboss.onIntroEnd = () => {
                 this.characterCanMove = true;
                 this.cameraLocked = false;
-                this.preventIdle = false; // ✅ Idle wieder erlauben
+                this.preventIdle = false;
             };
         }
     }
-
     updateEndbossBehavior() {
-        if (!this.bossActivated) return;
+        console.log('🎬 Endboss wird gezeichnet bei X:', this.endboss?.x);
 
+        if (this.gameOverHandled) return;
+        if (!this.bossActivated) return;
         const boss = this.endboss;
         const pepe = this.character;
 
@@ -336,12 +361,23 @@ class World {
         return false;
     }
 
+
     handleGameEnd(won) {
+        if (this.gameOverHandled) return;
         this.gameOverHandled = true;
-        this.showEndScreen(won); // Jetzt wird der Endscreen wirklich angezeigt
+
+        this.characterCanMove = false;
+        this.cameraLocked = true;
+        this.preventIdle = true;
+
+        if (this.backgroundMusic) {
+            this.backgroundMusic.pause();
+            this.backgroundMusic.currentTime = 0;
+        }
+
+        // Direkt die zentrale Methode aufrufen:
+        this.showEndScreen(won);
     }
-
-
     /**
  * Shows the final game screen with image and text.
  * @param {boolean} won - True if player won, false if lost
@@ -379,11 +415,6 @@ stopGameLoop() {
 
     keyboard.RIGHT = false;
     keyboard.LEFT = false;
-
-    if (this.endboss) {
-        this.endboss.freeze();
-    }
-
     console.log('🛑 Spiel gestoppt.');
 }
     startGameLoop() {

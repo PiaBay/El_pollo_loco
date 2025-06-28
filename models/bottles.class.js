@@ -17,7 +17,7 @@ class Bottle extends MovableObject {
     }
 
     isCollectedBy(character) {
-        const offset = 10; // optional – macht es etwas großzügiger
+        const offset = 6; // optional – macht es etwas großzügiger
 
         return (
             this.x + this.width > character.x + offset &&

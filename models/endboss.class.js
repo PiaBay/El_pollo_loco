@@ -1,3 +1,7 @@
+/**
+ * Class representing the Endboss enemy.
+ * Handles movement, attacks, damage, animations, and death behavior.
+ */
 class Endboss extends MovableObject {
     walking = false;
     activated = false;
@@ -6,8 +10,9 @@ class Endboss extends MovableObject {
     isHurt = false;
     isDead = false;
     isStunned = false;
-
+    phase = 'intro';
     attackInterval = null;
+    isIntroRunning = false;
 
 
     IMAGES_WALKING = [
@@ -26,7 +31,6 @@ class Endboss extends MovableObject {
         './assets/img_pollo_locco/img/4_enemie_boss_chicken/2_alert/G10.png',
         './assets/img_pollo_locco/img/4_enemie_boss_chicken/2_alert/G11.png',
         './assets/img_pollo_locco/img/4_enemie_boss_chicken/2_alert/G12.png'
-
     ];
 
     IMAGES_ATTACK = [
@@ -38,7 +42,7 @@ class Endboss extends MovableObject {
         './assets/img_pollo_locco/img/4_enemie_boss_chicken/3_attack/G18.png',
         './assets/img_pollo_locco/img/4_enemie_boss_chicken/3_attack/G19.png',
         './assets/img_pollo_locco/img/4_enemie_boss_chicken/3_attack/G20.png'
-    ]
+    ];
 
     IMAGES_HURT = [
         './assets/img_pollo_locco/img/4_enemie_boss_chicken/4_hurt/G21.png',
@@ -46,18 +50,20 @@ class Endboss extends MovableObject {
         './assets/img_pollo_locco/img/4_enemie_boss_chicken/4_hurt/G23.png'
     ];
 
-
     IMAGES_DIE = [
         './assets/img_pollo_locco/img/4_enemie_boss_chicken/5_dead/G24.png',
         './assets/img_pollo_locco/img/4_enemie_boss_chicken/5_dead/G25.png',
         './assets/img_pollo_locco/img/4_enemie_boss_chicken/5_dead/G26.png'
-    ]
+    ];
 
-
+    /**
+     * Constructs the Endboss instance and preloads images.
+     * @param {number} x - Starting X coordinate
+     */
     constructor(x) {
         super();
-        this.x = x;              
-        this.y = 180;  
+        this.x = 2600;
+        this.y = 180;
         this.width = 250;
         this.height = 300;
         this.speed = 8;
@@ -67,63 +73,59 @@ class Endboss extends MovableObject {
         this.gravity = 0.8;
         this.groundY = 180;
 
-        // 🔽 ALLE Bilder vorladen
-        this.loadImages(this.IMAGES_WALKING, () => {
-            this.setImage(this.IMAGES_WALKING[0]);
-        });
+        this.loadImages(this.IMAGES_WALKING, () => this.setImage(this.IMAGES_WALKING[0]));
         this.loadImages(this.IMAGES_ALERT);
         this.loadImages(this.IMAGES_ATTACK);
         this.loadImages(this.IMAGES_HURT);
-        this.loadImages(this.IMAGES_DIE);    }
+        this.loadImages(this.IMAGES_DIE);
+    }
 
+    /**
+     * Determines if the boss can currently take damage.
+     * @returns {boolean}
+     */
     canTakeDamage() {
         return Date.now() - this.lastHitTime > this.hurtCooldown;
     }
 
-    
+    /** Starts the boss intro animation. */
     startIntroAnimation() {
-        if (this.introPlayed) return;
+        if (this.introPlayed || this.isIntroRunning) return;
 
-        this.introPlayed = true; // 🔁 Direkt am Anfang – verhindert Mehrfachaufruf!
+        this.isIntroRunning = true;
+        this.introPlayed = true;
+        this.phase = 'intro';
         this.speed = 0;
-
-        // ➕ Intro-Callback aufrufen (Chickens entfernen)
-        if (typeof this.onIntroEnd === 'function') {
-            this.onIntroStart();
-        }
-
-        this.loadImages(this.IMAGES_ALERT, () => {
-            let frame = 0;
-            this.alertInterval = setInterval(() => {
-                this.setImage(this.IMAGES_ALERT[frame % this.IMAGES_ALERT.length]);
-                frame++;
-                if (frame >= this.IMAGES_ALERT.length * 1) {
-                    clearInterval(this.alertInterval);
-                    this.alertInterval = null;
-
-                    this.startWalkingAnimation();
-                    this.startAttacking();
-
-                    if (typeof this.onIntroEnd === 'function') {
-                        this.onIntroEnd();
-                    }
-                    this.speed = 1; 
-                }
-            }, 500);
-        });
+        this.onIntroStart?.();
+        this.loadImages(this.IMAGES_ALERT, () => this.playAlertAnimation());
     }
 
+    /** Plays alert animation frames. */
+    playAlertAnimation() {
+        let frame = 0;
+        this.alertInterval = setInterval(() => {
+            this.setImage(this.IMAGES_ALERT[frame % this.IMAGES_ALERT.length]);
+            frame++;
+            if (frame >= this.IMAGES_ALERT.length) this.endIntroAnimation();
+        }, 500);
+    }
 
-    /**
-     * Starts walking animation when ready.
-     */
+    /** Finalizes intro and starts movement and attack. */
+    endIntroAnimation() {
+        clearInterval(this.alertInterval);
+        this.alertInterval = null;
+
+        this.isIntroRunning = false;
+        this.phase = 'attack';
+        this.startWalkingAnimation();
+        this.onIntroEnd?.();
+        this.speed = 5;
+    }
+    /** Starts the walking animation. */
     startWalkingAnimation() {
-        if (this.animationInterval) return; // Nur auf Interval prüfen
-
-        console.log('@ Starte Walking');
+        if (this.animationInterval) return;
         this.walking = true;
         this.currentImage = 0;
-
         this.animationInterval = setInterval(() => {
             const i = this.currentImage % this.IMAGES_WALKING.length;
             this.setImage(this.IMAGES_WALKING[i]);
@@ -131,30 +133,19 @@ class Endboss extends MovableObject {
         }, 350);
     }
 
-
-
-    /**
-     * Moves the boss to the left (only after landing).
-     */
+    /** Moves the boss left until reaching intro position. */
     moveLeft() {
         if (this.isHurt) return;
-
         if (!this.walking) this.startWalkingAnimation();
-
         if (this.x > this.introPositionX) {
             this.x -= this.speed;
-        } else if (!this.introPlayed && !this.alertInterval) { // NEU: zusätzlich prüfen!
-            console.log('🐓 Endboss angekommen');
+        } else if (!this.introPlayed && !this.alertInterval) {
             this.stopWalkingAnimation();
             this.startIntroAnimation();
         }
     }
 
-
-
-
-
-
+    /** Stops the walking animation. */
     stopWalkingAnimation() {
         this.walking = false;
         clearInterval(this.animationInterval);
@@ -162,111 +153,133 @@ class Endboss extends MovableObject {
         this.currentImage = 0;
     }
 
-
+    /** Starts attacking sequence with animation and sound. */
     startAttacking() {
         if (this.attackInterval) return;
-
-        clearInterval(this.animationInterval);
-        this.animationInterval = null;
-        this.currentImage = 0;
-        const attackImages = this.IMAGES_ATTACK;
-
-        this.loadImages(this.IMAGES_ATTACK, () => {
-            let frame = 0;
-            this.animationInterval = setInterval(() => {
-                if (frame < attackImages.length) {
-                    this.setImage(attackImages[frame]);
-                    frame++;
-                } else {
-                    clearInterval(this.animationInterval);
-                    this.animationInterval = null;
-                    this.currentImage = 0;
-                    this.isHurt = false;
-                    this.setImage(this.IMAGES_WALKING[0]);
-                }
-            }, 300);
-
-        });
+        this.playAttackSound();
+        this.resetAnimationState();
+        this.loadImages(this.IMAGES_ATTACK, () => this.playAttackAnimation());
     }
 
+    /** Plays boss attack sound. */
+    playAttackSound() {
+        if (localStorage.getItem('soundEnabled') === 'true') {
+            this.world.playSound(this.world.bossAttackSound);
+        }
+    }
 
-
-    playHurtAnimation() {
-        if (this.isDead) return;
-
+    /** Resets the animation state and image. */
+    resetAnimationState() {
         clearInterval(this.animationInterval);
         this.animationInterval = null;
         this.currentImage = 0;
+    }
 
-        const hurtImages = this.IMAGES_HURT;
+    /** Plays attack animation frames. */
+    playAttackAnimation() {
+        const attackImages = this.IMAGES_ATTACK;
         let frame = 0;
-
         this.animationInterval = setInterval(() => {
-            if (frame < hurtImages.length) {
-                this.setImage(hurtImages[frame]);
+            if (frame < attackImages.length) {
+                this.setImage(attackImages[frame]);
                 frame++;
             } else {
                 clearInterval(this.animationInterval);
                 this.animationInterval = null;
                 this.currentImage = 0;
-                this.setImage(this.IMAGES_WALKING[0]);
-                this.walking = false;
-                // ✅ Flags sauber zurücksetzen – erst jetzt!
                 this.isHurt = false;
-                this.isStunned = false;
-
-                this.startWalkingAnimation(); // oder nur wenn nötig
+                this.setImage(this.IMAGES_WALKING[0]);
             }
         }, 300);
     }
 
+    /** Plays hurt animation when taking damage. */
+    playHurtAnimation() {
+        if (this.isDead) return;
+        this.resetAnimationState();
+        let frame = 0;
+        this.animationInterval = setInterval(() => {
+            if (frame < this.IMAGES_HURT.length) {
+                this.setImage(this.IMAGES_HURT[frame]);
+                frame++;
+            } else {
+                this.finishHurtAnimation();
+            }
+        }, 300);
+    }
+
+    /** Finalizes hurt animation state. */
+    finishHurtAnimation() {
+        clearInterval(this.animationInterval);
+        this.animationInterval = null;
+        this.currentImage = 0;
+        this.setImage(this.IMAGES_WALKING[0]);
+        this.walking = false;
+        this.isHurt = false;
+        this.isStunned = false;
+        this.startWalkingAnimation();
+    }
+
     /**
-     * Reduces energy and checks if the boss dies.
+     * Handles damage intake and calls death if energy depleted.
+     * @param {number} amount - Amount of damage
+     * @param {StatusBar} [statusBar] - Optional custom health bar
      */
     hit(amount = 30, statusBar = null) {
         if (this.isDead) return;
-
-        this.energy = Math.max(0, this.energy - amount);
-        console.log('⚡ Boss energy nach Treffer:', this.energy);
-
-        if (statusBar) {
-            statusBar.setPercentage(this.energy);
-        } else if (this.bossHealthBar) {
-            this.bossHealthBar.setPercentage(this.energy);
-        }
-
+        this.reduceEnergy(amount, statusBar);
         this.lastHitTime = Date.now();
         this.isHurt = true;
         this.isStunned = true;
-
         if (this.energy <= 0) {
             console.log('💀 Energie ist 0 → DIE aufrufen!');
             this.die();
         } else {
             this.playHurtAnimation();
-
         }
     }
 
-    /**
-     * Steuert die Bewegung des Endbosses auf das Ziel zu.
-     * @param {Character} character - Die Spielfigur (z. B. Pepe)
-     */
-    pursueTarget(character) {
-        // Nur wenn Boss aktiv ist
-        if (this.isDead || this.isHurt || this.isStunned || this.energy <= 0) return;
+    /** Reduces energy and updates health bar. */
+    reduceEnergy(amount, statusBar) {
+        this.energy = Math.max(0, this.energy - amount);
+        console.log('⚡ Boss energy after hit:', this.energy);
+        const bar = statusBar || this.bossHealthBar;
+        bar?.setPercentage(this.energy);
+    }
 
+    /** Moves the boss toward the player and attacks if in range. */
+    pursueTarget(character) {
+        if (this.shouldSkipPursuit()) return;
+
+        switch (this.phase) {
+            case 'attack':
+                this.pursueAndAttack(character);
+                break;
+            case 'retreat':
+                this.moveBackToIntroPosition();
+                break;
+            case 'wait':
+                // nichts tun – auf neues Intro warten
+                break;
+        }
+    }
+
+
+    /** Checks if boss should skip pursuing the player. */
+    shouldSkipPursuit() {
+        return this.isDead || this.isHurt || this.isStunned || this.energy <= 0;
+    }
+
+
+    /**
+ * Moves toward the character and checks for attack.
+ * @param {Character} character - The player character
+ */
+    pursueAndAttack(character) {
         const dist = character.x - this.x;
 
         if (Math.abs(dist) > 20) {
-            if (dist < 0) {
-                this.x -= this.speed;
-                this.otherDirection = false;
-            } else {
-                this.x += this.speed;
-                this.otherDirection = true;
-            }
-
+            this.moveTowardsTarget(dist);
             this.startWalkingAnimation();
         } else {
             this.stopWalkingAnimation();
@@ -274,54 +287,96 @@ class Endboss extends MovableObject {
 
         this.checkAttack(character);
     }
+    /** Moves boss in direction of target. */
+    moveTowardsTarget(dist) {
+        if (dist < 0) {
+            this.x -= this.speed;
+            this.otherDirection = false;
+        } else {
+            this.x += this.speed;
+            this.otherDirection = true;
+        }
+    }
 
+    /** Checks attack condition and applies damage if applicable. */
     checkAttack(character) {
         const distance = Math.abs(this.x - character.x);
-        const attackRange = 80;
         const now = Date.now();
+        const attackRange = 80;
 
         if (!this.lastAttackTime) this.lastAttackTime = 0;
 
-        if (
-            distance < attackRange &&
-            !this.isDead &&
-            !this.isHurt &&
-            !this.isStunned &&
-            now - this.lastAttackTime > 1000 // nur 1x pro Sekunde
-        ) {
-            console.log('⚔️ Endboss greift an!');
+        if (this.canAttack(distance, now)) {
             this.startAttacking();
             character.takeDamage(20);
             this.lastAttackTime = now;
+            this.updateCharacterStatusBar(character);
 
-            // ✅ Statusbar von Pepe aktualisieren
-            if (this.world?.statusBar) {
-                this.world.statusBar.setEnergy(character.energy);
-            }
+            // 🆕 Boss wechselt nach Treffer in Rückzugsphase
+            this.phase = 'retreat';
+            this.stopWalkingAnimation();
+        }
+    }
+    
 
-            console.log('💥 Endboss hat Pepe getroffen. Energie:', character.energy);
+    /** Returns true if attack is allowed. */
+    canAttack(distance, now) {
+        return distance < 80 && !this.isDead && !this.isHurt && !this.isStunned && now - this.lastAttackTime > 1000;
+    }
+
+    /** Updates character energy bar. */
+    updateCharacterStatusBar(character) {
+        this.world?.statusBar?.setEnergy(character.energy);
+    }
+
+
+    moveBackToIntroPosition() {
+        if (this.x < this.introPositionX) {
+            this.x += this.speed;
+            this.otherDirection = true;
+            this.startWalkingAnimation();
+        } else {
+            this.stopWalkingAnimation();
+            this.phase = 'wait';
+            this.introPlayed = false;
+            this.startIntroAnimation(); // 🔁 Intro wieder abspielen
         }
     }
 
 
-    /**
-     * Handles boss death.
-     */
+    /** Handles death animation and fall. */
     die() {
         if (this.isDead) return;
-        console.log('☠️ DIE wurde aufgerufen!');
-
+        console.log('☠️ DIE was called!');
         this.isDead = true;
+        this.stopCurrentAnimation();
+        this.updateHealthBarToZero();
+        this.prepareDeathFall();
+        this.playDeathAnimation();
+    }
 
-        if (this.bossHealthBar) {
-            this.bossHealthBar.setPercentage(0);
-        }
+    /** Sets health bar to 0. */
+    updateHealthBarToZero() {
+        this.bossHealthBar?.setPercentage(0);
+    }
 
+    /** Stops animation interval and resets state. */
+    stopCurrentAnimation() {
         clearInterval(this.animationInterval);
         this.animationInterval = null;
         this.walking = false;
         this.currentImage = 0;
+    }
 
+    /** Enables falling after death. */
+    prepareDeathFall() {
+        this.velocityY = -5;
+        this.vxAfterDeath = 3;
+        this.fallAfterDeath = true;
+    }
+
+    /** Plays death animation frames. */
+    playDeathAnimation() {
         let frame = 0;
         const interval = setInterval(() => {
             if (frame < this.IMAGES_DIE.length) {
@@ -329,30 +384,7 @@ class Endboss extends MovableObject {
                 frame++;
             } else {
                 clearInterval(interval);
-                this.velocityY = -5;
-                this.vxAfterDeath = 3;
-                this.fallAfterDeath = true;
             }
         }, 300);
     }
-
-    freeze() {
-        console.log('🧊 Endboss eingefroren!');
-
-        // Alle laufenden Intervalle stoppen
-        clearInterval(this.alertInterval);
-        clearInterval(this.animationInterval);
-        clearInterval(this.attackInterval);
-
-        this.alertInterval = null;
-        this.animationInterval = null;
-        this.attackInterval = null;
-
-        // Bewegung & Aktionen blockieren
-        this.isStunned = true;
-        this.isHurt = false;
-        this.walking = false;
-        this.freeze = true; // optional für weitere Abfragen
-    }
-
 }
