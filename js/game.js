@@ -11,6 +11,8 @@ let world;
 let backgroundMusic;
 let musicStarted = false;
 let isPaused = false;
+/** @type {AudioManager} */
+window.audio;
 
 /**
  * Adjusts the canvas for high DPI displays (e.g. Retina).
@@ -28,7 +30,6 @@ function adjustCanvasForHDPI(canvas) {
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   return ctx;
 }
-
 function startGame() {
   canvas = document.getElementById('gameCanvas');
   const ctx = adjustCanvasForHDPI(canvas);
@@ -37,11 +38,15 @@ function startGame() {
   character.loadImages(character.IMAGES_WALKING, () => {
     character.setImage(character.IMAGES_WALKING[0]);
     character.startWalkingAnimation();
-    world = new World(canvas, ctx, character);
-    world.loadSounds();
-    applyAudioSettings(); // Musik bei Spielstart einstellen
+
+    world = new World(canvas, ctx, character, window.audio);
+
+    applyAudioSettings();        
+    window.audio.play('gameMusic'); // ✅ korrekt
   });
 }
+
+
 
 function restartGame() {
   location.reload();
@@ -56,12 +61,13 @@ function exitGame() {
 // Musik nur einmal nach Nutzeraktion starten
 function startMusicOnce() {
   if (!musicStarted && localStorage.getItem('musicEnabled') !== 'false') {
-    backgroundMusic.play().catch((e) => {
-      console.warn('🎵 Musik konnte nicht automatisch abgespielt werden:', e);
-    });
-    musicStarted = true;
+    if (window.audio) {
+      window.audio.play('menuMusic');
+      musicStarted = true;
+    }
   }
 }
+
 
 function initOverlayButtons() {
   const helpBtn = document.getElementById('help-btn');
@@ -103,16 +109,15 @@ function initStartButton() {
 
   if (startButton && startScreen && canvas) {
     startButton.addEventListener('click', () => {
-      // Menü-Musik beenden, falls sie läuft
-      if (window.backgroundMusic && !window.backgroundMusic.paused) {
-        window.backgroundMusic.pause();
-        window.backgroundMusic.currentTime = 0;
+      // Menü-Musik beenden (mit AudioManager)
+      if (window.audio) {
+        window.audio.stop('menuMusic');
       }
 
       startScreen.classList.add('hidden');
       canvas.classList.remove('hidden');
 
-      startGame(); // <- ruft intern applyAudioSettings auf (z. B. in init())
+      startGame(); // <- ruft intern applyAudioSettings auf
     });
   }
 }
@@ -147,44 +152,22 @@ function resumeGame() {
 }
 
 function applyAudioSettings() {
-  const musicEnabled = localStorage.getItem('musicEnabled') === 'true';
-  const soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+  const isStartScreenVisible = !document.getElementById('start-screen')?.classList.contains('hidden');
 
-  if (world) {
-    world.musicEnabled = musicEnabled;
-    world.soundEnabled = soundEnabled;
-
-    if (world.backgroundMusic) {
-      if (musicEnabled) {
-        world.backgroundMusic.muted = false;
-        world.backgroundMusic.play().catch(() => { });
-      } else {
-        world.backgroundMusic.pause();
-        world.backgroundMusic.muted = true;
-        world.backgroundMusic.currentTime = 0;
-      }
-    }
+  if (window.audio) {
+    window.audio.applySettingsBasedOnState(isStartScreenVisible);
   }
 
-  if (window.backgroundMusic) {
-    if (musicEnabled) {
-      window.backgroundMusic.muted = false;
-      window.backgroundMusic.play().catch(() => { });
-    } else {
-      window.backgroundMusic.pause();
-      window.backgroundMusic.muted = true;
-      window.backgroundMusic.currentTime = 0;
-    }
+  if (world) {
+    world.musicEnabled = window.audio.musicEnabled;
+    world.soundEnabled = window.audio.soundEnabled;
   }
 }
 
 window.applyAudioSettings = applyAudioSettings;
 
 window.addEventListener('DOMContentLoaded', () => {
-  backgroundMusic = new Audio('../audio/spanish-guitar-208363.mp3');
-  backgroundMusic.loop = true;
-  backgroundMusic.volume = 0.4;
-  window.backgroundMusic = backgroundMusic; // global verfügbar
+  window.audio = new AudioManager();
 
   document.addEventListener('click', startMusicOnce, { once: true });
   document.addEventListener('keydown', startMusicOnce, { once: true });

@@ -8,6 +8,7 @@
         <link rel="stylesheet" href="./styles/font.css">
 
     <link class="fav-icon" rel="icon" href="./assets/img_pollo_locco/img/3_enemies_chicken/chicken_small/1_walk/2_w.png">
+    <script src="./models/audioManager.class.js"></script>
     <script src="./models/movable_object.class.js"></script>
     <script src="./models/background-object.class.js"></script>
     <script src="./models/character.class.js"></script>
@@ -22,7 +23,9 @@
             <script src="./models/coins.class.js"></script>
             <script src="./models/throwable-object.class.js"></script>
     <script src="./models/endboss.class.js"></script>
-    
+    <script src="./models/endbossController.class.js"></script>
+        <script src="./models/statusbarManager.class.js"></script>
+            <script src="./models/inputHandler.class.js"></script>
     <script src="./js/level1.js"></script>
     <script src="./models/world.class.js"></script>
     <script src="./js/game.js"></script>
@@ -62,5 +65,8 @@
         <iframe id="overlay-frame" src=""></iframe>
     </div>
 </div>
+<script>
+    console.log('AudioManager:', typeof AudioManager);
+</script>
 </body>
 </html>

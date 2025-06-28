@@ -5,61 +5,57 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Einstellungen</title>
-    <link class="fav-icon" rel="icon" href="../assets/img_pollo_locco/img/3_enemies_chicken/chicken_small/1_walk/2_w.png">
+    <link class="fav-icon" rel="icon"
+        href="../assets/img_pollo_locco/img/3_enemies_chicken/chicken_small/1_walk/2_w.png">
     <link rel="stylesheet" href="../styles/additional.css">
     <link rel="stylesheet" href="../styles/font.css">
-    <script src="../js/game.js"></script>
 </head>
 
 <body class="body fullscreen-body">
 
-<div class="button-bar">
-    <button onclick="window.parent.closeOverlay()">Zurück</button>
-</div>
+    <div class="button-bar">
+        <button onclick="window.parent.closeOverlay()">Zurück</button>
+    </div>
 
     <h1>Einstellungen</h1>
 
     <div class="instruction">
         <h3>Audio</h3>
-
         <label>
             <input type="checkbox" id="music-toggle" />
-<span>Musik deaktivieren</span>
-            </label>
+            <span>Musik deaktivieren</span>
+        </label>
         <br />
         <label>
             <input type="checkbox" id="sound-toggle" />
-<span>Töne deaktivieren</span>
+            <span>Töne deaktivieren</span>
         </label>
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const music = document.getElementById('music-toggle');
-        const sound = document.getElementById('sound-toggle');
+        document.addEventListener('DOMContentLoaded', () => {
+            const music = document.getElementById('music-toggle');
+            const sound = document.getElementById('sound-toggle');
 
-        // Bestehende Werte lesen
-        const musicEnabled = localStorage.getItem('musicEnabled') === 'true';
-        const soundEnabled = localStorage.getItem('soundEnabled') === 'true';
+            const musicEnabled = localStorage.getItem('musicEnabled') === 'true';
+            const soundEnabled = localStorage.getItem('soundEnabled') === 'true';
 
-        // Checkbox zeigt "deaktivieren", deshalb Umkehrung
-        music.checked = !musicEnabled;
-        sound.checked = !soundEnabled;
+            music.checked = !musicEnabled;
+            sound.checked = !soundEnabled;
 
-        // Beim Ändern speichern + Audio anwenden
-        music.addEventListener('change', () => {
-            const newMusicValue = !music.checked;
-            localStorage.setItem('musicEnabled', newMusicValue);
-            parent.applyAudioSettings?.(); // direkt anwenden
+            music.addEventListener('change', () => {
+                const newMusicValue = !music.checked;
+                localStorage.setItem('musicEnabled', newMusicValue);
+                parent.applyAudioSettings?.();
+            });
+
+            sound.addEventListener('change', () => {
+                const newSoundValue = !sound.checked;
+                localStorage.setItem('soundEnabled', newSoundValue);
+                parent.applyAudioSettings?.();
+            });
         });
-
-        sound.addEventListener('change', () => {
-            const newSoundValue = !sound.checked;
-            localStorage.setItem('soundEnabled', newSoundValue);
-            parent.applyAudioSettings?.();
-        });
-    });
-        </script>
+    </script>
 
 </body>
 

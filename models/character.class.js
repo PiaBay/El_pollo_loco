@@ -171,9 +171,7 @@ class Character extends MovableObject {
         this.lastHitTime = Date.now();
         this.isHurt = true;
         this.isStunned = true;
-        if (localStorage.getItem('soundEnabled') === 'true') {
-            this.world.playSound(this.world.hurtSound);
-        }               
+        this.world.audio.play('hurt');            
 
         if (this.energy <= 0) {
             this.die();
