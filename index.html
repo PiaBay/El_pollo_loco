@@ -31,24 +31,36 @@
     <div id="start-screen" class="start-end-screen">
         <h1>El Pollo Loco</h1>
     
-        <div class="start-buttons">
-            <button id="start-btn"><img  class="symbols" src="./assets/saloon-3695003_1280.png"><span>START</span></button>
-            <button id="help-btn"><a href="./html/help.html">
-                <img  class="symbols" src="./assets/signpost-308368_1280.png"></a><span>HILFE</span></button>
-            <button id="settings-btn" ><a href="./html/settings.html">
-                <img class="symbols" src="./assets/wagon-wheel-5004284_1280.png"></a><span>EINSTELLUNG</span></button>
-        </div>
-    </div>
-    <div  class="button-bar">
-        <button onclick="wentBack()">← Zurück</button>
-    </div>
-    <canvas id="gameCanvas" class="hidden"></canvas>
-<div id="end-screen" class="hidden start-end-screen">
-    <img id="end-image" src="" alt="Game Result" />
-    <button onclick="location.reload()">Restart</button>
-    <h1 id="end-text"></h1>
+<div class="start-buttons">
+    <button id="start-btn">
+        <img class="symbols" src="./assets/saloon-3695003_1280.png"><span>START</span>
+    </button>
+
+    <button id="help-btn">
+        <img class="symbols" src="./assets/signpost-308368_1280.png"><span>HILFE</span>
+    </button>
+
+    <button id="settings-btn">
+        <img class="symbols" src="./assets/wagon-wheel-5004284_1280.png"><span>EINSTELLUNG</span>
+    </button>
 </div>
+    </div>
 
-
+    <canvas id="gameCanvas" class="hidden"></canvas>
+    <div id="game-controls" class="hidden">
+        <button onclick="exitGame()">Spiel beenden</button>
+        <button onclick="openOverlay('./html/settings.html')">🔊</button>
+    </div>
+    <div id="end-screen" class="hidden start-end-screen">
+        <img id="end-image" src="" alt="Game Result" />
+        <button onclick="location.reload()">Restart</button>
+        <h1 id="end-text"></h1>
+    </div>
+<div id="overlay" class="overlay hidden">
+    <div class="overlay-content">
+        <button class="close-overlay" onclick="closeOverlay()">✖</button>
+        <iframe id="overlay-frame" src=""></iframe>
+    </div>
+</div>
 </body>
 </html>

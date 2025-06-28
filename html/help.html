@@ -13,9 +13,9 @@
 </head>
 
 <body class="body">
-    <div class="button-bar">
-        <button onclick="goBack()">← Zurück</button>
-    </div>
+<div class="button-bar">
+    <button onclick="window.parent.closeOverlay()">Zurück</button>
+</div>
 
     <h1>Spielanleitung: El Pollo Loco</h1>
 
@@ -47,10 +47,11 @@
         </ul>
     </div>
 
-    <div class="start-button-container">
-<a href="../index.html">
-    <button>Spiel starten</button>
-</a>    </div>
+<div class="start-button-container">
+    <button onclick="window.parent.closeOverlay()">Zurück zum Start</button>
+</div>
+
+
 
 </body>
 

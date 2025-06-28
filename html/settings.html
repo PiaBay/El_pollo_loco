@@ -15,9 +15,9 @@
 
 <body class="body">
 
-    <div class="button-bar">
-        <button onclick="window.location.href='index.html'">← Zurück</button>
-    </div>
+<div class="button-bar">
+    <button onclick="window.parent.closeOverlay()">Zurück</button>
+</div>
 
     <h1>Einstellungen</h1>
 
@@ -26,34 +26,42 @@
 
         <label>
             <input type="checkbox" id="music-toggle" />
-            Musik aktivieren
-        </label>
+<span>Musik deaktivieren</span>
+            </label>
         <br />
         <label>
             <input type="checkbox" id="sound-toggle" />
-            Spieltöne aktivieren
+<span>Töne deaktivieren</span>
         </label>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const music = document.getElementById('music-toggle');
-            const sound = document.getElementById('sound-toggle');
+    document.addEventListener('DOMContentLoaded', () => {
+        const music = document.getElementById('music-toggle');
+        const sound = document.getElementById('sound-toggle');
 
-            // Lade gespeicherte Einstellungen
-            music.checked = localStorage.getItem('musicEnabled') === 'true';
-            sound.checked = localStorage.getItem('soundEnabled') === 'true';
+        // Bestehende Werte lesen
+        const musicEnabled = localStorage.getItem('musicEnabled') === 'true';
+        const soundEnabled = localStorage.getItem('soundEnabled') === 'true';
 
-            // Einstellungen speichern
-            music.addEventListener('change', () => {
-                localStorage.setItem('musicEnabled', music.checked);
-            });
+        // Checkbox zeigt "deaktivieren", deshalb Umkehrung
+        music.checked = !musicEnabled;
+        sound.checked = !soundEnabled;
 
-            sound.addEventListener('change', () => {
-                localStorage.setItem('soundEnabled', sound.checked);
-            });
+        // Beim Ändern speichern + Audio anwenden
+        music.addEventListener('change', () => {
+            const newMusicValue = !music.checked;
+            localStorage.setItem('musicEnabled', newMusicValue);
+            parent.applyAudioSettings?.(); // direkt anwenden
         });
-    </script>
+
+        sound.addEventListener('change', () => {
+            const newSoundValue = !sound.checked;
+            localStorage.setItem('soundEnabled', newSoundValue);
+            parent.applyAudioSettings?.();
+        });
+    });
+        </script>
 
 </body>
 

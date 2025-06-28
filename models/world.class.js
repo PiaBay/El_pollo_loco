@@ -30,11 +30,19 @@ class World {
         this.characterCanMove = true;
         this.preventIdle = false;
         this.gameOverHandled = false;
-        this.availableBottles = 0;
-        this.maxBottleCapacity = 30; // oder was du willst
-        this.character.world = this; 
-        this.loadLevelContent();
+        this.maxBottleCapacity = 30;
+        this.character.world = this;
 
+        this.loadSounds();
+        this.applyAudioPreferences();
+        this.setupKeyboard();
+        this.loadLevelContent();
+        this.soundEnabled = localStorage.getItem('soundEnabled') !== 'false'; // default: true
+        this.musicEnabled = localStorage.getItem('musicEnabled') === 'true';  // default: false (oder wie du willst)
+        this.draw();
+    }
+
+    loadSounds() {
         this.jumpSound = new Audio('./audio/jump-up-245782.mp3');
         this.throwSound = new Audio('./audio/bottle-pop-45531.mp3');
         this.hurtSound = new Audio('./audio/grunt2-85989.mp3');
@@ -46,19 +54,20 @@ class World {
         this.bossHitSound = new Audio('./audio/roaster-crows-2-363352.mp3');
         this.bossIntroSound = new Audio('./audio/dark-drone-351092.mp3');
         this.backgroundMusic = new Audio('./audio/rhythm-of-samba-326623.mp3');
-        this.backgroundMusic.loop = true; // 🎵 Endlosschleife
-        this.backgroundMusic.volume = 0.3; // 🔉 Lautstärke anpassen (0 = stumm, 1 = voll)
-        if (localStorage.getItem('musicEnabled') === 'true') {
-            this.backgroundMusic.volume = 0.3;
-            this.backgroundMusic.play();
+        this.backgroundMusic.loop = true;
+        this.backgroundMusic.volume = 0.3;
+    }
+
+
+
+
+    playSound(sound) {
+        if ((sound === this.backgroundMusic && this.musicEnabled) ||
+            (sound !== this.backgroundMusic && this.soundEnabled)) {
+            sound?.play().catch((e) => {
+                console.warn('🎵 Fehler beim Abspielen von Sound:', e);
+            });
         }
-
-        this.setupKeyboard();
-        this.backgroundMusic.play().catch((e) => {
-            console.warn('🔇 Hintergrundmusik konnte nicht automatisch starten:', e);
-        });
-
-        this.draw();
     }
 
     loadLevelContent() {
@@ -143,8 +152,7 @@ class World {
                 this.collectedCoins++;
                 this.coinStatusBar.setCoins(this.collectedCoins, this.totalCoins);
                 if (localStorage.getItem('soundEnabled') === 'true') {
-                    this.coinSound?.play();
-                                }               
+                    this.playSound(this.coinSound);                                }               
 
                 return false;
             }
@@ -162,8 +170,7 @@ class World {
                 if (fromAbove) {
                     this.character.velocityY = -3;
                     if (localStorage.getItem('soundEnabled') === 'true') {
-                        this.chickenSound?.play();
-                    }
+                        this.playSound(this.chickenSound);                    }
                     return false;
                 } else if (this.character.canTakeDamage()) {
                     this.character.takeDamage(20);
@@ -183,8 +190,8 @@ class World {
 
                 this.bottleStatusBar.setBottles(this.availableBottles, this.maxBottleCapacity);
                 console.log('Available:', this.availableBottles);
-                this.bottlePickupSound?.play();
-                console.log('✅ Flasche eingesammelt bei y:', bottle.y);
+                this.playSound(this.bottlePickupSound);
+                                console.log('✅ Flasche eingesammelt bei y:', bottle.y);
 
                 return false; // Flasche aus der Liste entfernen
             }
@@ -200,8 +207,7 @@ class World {
 
             if (this.bossActivated && collides) {
                 if (localStorage.getItem('soundEnabled') === 'true') {
-                    this.bossHitSound?.play();
-                }
+                    this.playSound(this.bossHitSound);                }
                 this.endboss.hit(30, this.bossHealthBar); // 30 = Schaden
                 return false;
             }
@@ -223,8 +229,7 @@ class World {
     checkEndbossActivation() {
         if (!this.bossActivated && this.character.x > 2200) {
             this.bossActivated = true;
-            this.bossIntroSound?.play(); // 🔊 Intro-Sound abspielen
-
+            this.playSound(this.bossIntroSound);
             this.cameraLocked = true;
             this.characterCanMove = false;
             this.preventIdle = true; // ⛔️ Idle sofort deaktivieren
@@ -298,7 +303,7 @@ class World {
             if (e.key === 'ArrowRight') keyboard.RIGHT = true;
             if (e.key === 'ArrowLeft') keyboard.LEFT = true;
             if (e.key === 'ArrowUp' && !this.character.isInAir) {
-                this.jumpSound?.play(); // Sound hier
+                this.playSound(this.jumpSound);
                 this.character.jump();
             }  
             if (e.key === ' ' && this.availableBottles > 0) {
@@ -361,28 +366,38 @@ class World {
         screen.classList.remove('hidden');
     }
 
-    stopGameLoop() {
-        if (this.animationFrameId) {
-            cancelAnimationFrame(this.animationFrameId);
-            this.animationFrameId = null;
-        }
-        if (this.backgroundMusic) {
-            this.backgroundMusic.pause();
-            this.backgroundMusic.currentTime = 0;
-        }
-        this.characterCanMove = false;
-        this.cameraLocked = true;
+stopGameLoop() {
+    if (this.animationFrameId) {
+        cancelAnimationFrame(this.animationFrameId);
+        this.animationFrameId = null;
+    }
+    if (this.backgroundMusic) {
+        this.backgroundMusic.pause();
+    }
+    this.characterCanMove = false;
+    this.cameraLocked = true;
 
-        // Tasteneingaben blockieren
-        keyboard.RIGHT = false;
-        keyboard.LEFT = false;
+    keyboard.RIGHT = false;
+    keyboard.LEFT = false;
 
-        // Endboss stoppen
-        if (this.endboss) {
-            this.endboss.freeze();  // 🧊 <– HIER wird alles gestoppt
+    if (this.endboss) {
+        this.endboss.freeze();
+    }
+
+    console.log('🛑 Spiel gestoppt.');
+}
+    startGameLoop() {
+        if (!this.animationFrameId) {
+            this.characterCanMove = true;
+            this.cameraLocked = false;
+
+            if (this.musicEnabled) {
+                this.backgroundMusic.play().catch(() => { });
+            }
+
+            this.draw();
+            console.log('▶️ Spiel fortgesetzt.');
         }
-
-        console.log('🛑 Spiel gestoppt.');
     }
 
 

@@ -104,6 +104,46 @@ position: absolute;
     padding-bottom: 25px;
 }
 
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.overlay-content {
+    position: relative;
+    width: 90%;
+    height: 100vh;
+    background-color: white;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.overlay iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.close-overlay {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background-color: #d9534f;
+    color: white;
+    border: none;
+    font-size: 24px;
+    padding: 5px 10px;
+    cursor: pointer;
+    z-index: 10000;
+}
 
 #end-screen.hidden {
     display: none !important;
@@ -120,6 +160,24 @@ position: absolute;
     font-size: 48px;
     font-family: sans-serif;
     margin-bottom: 20px;
+}
+
+
+#game-controls {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    gap: 12px;
+    z-index: 999;
+}
+
+#game-controls button {
+    padding: 8px 12px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
 }
 
 .hidden {

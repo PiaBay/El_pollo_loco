@@ -125,7 +125,10 @@ class Character extends MovableObject {
         this.isInAir = true;
         this.jumpAnimationRunning = false;
         this.startAnimation(this.IMAGES_JUMPING, 150);
-        if (this.jumpSound) this.jumpSound.play();
+
+        if (this.world?.playSound) {
+            this.world.playSound(this.jumpSound);
+        }
     }
     moveRight() {
         if (this.isDead || this.isStunned) return;
@@ -243,7 +246,6 @@ class Character extends MovableObject {
     }
 
     throwBottle(world) {
-        // ⛔️ Nicht werfen, wenn keine Flaschen da oder Boss verletzt ist
         if (world.availableBottles <= 0) return;
         if (world.bossActivated && world.endboss.isHurt) return;
 
@@ -256,7 +258,6 @@ class Character extends MovableObject {
 
         if (world.throwSound) world.throwSound.play();
     }
-
 
 
     die() {
@@ -305,7 +306,4 @@ class Character extends MovableObject {
             }
         }
     }
-
-
-
 }

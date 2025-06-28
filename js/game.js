@@ -1,4 +1,3 @@
-
 const keyboard = {
   LEFT: false,
   RIGHT: false,
@@ -7,9 +6,14 @@ const keyboard = {
   SPACE: false
 };
 
+let canvas;
+let world;
+let backgroundMusic;
+let musicStarted = false;
+let isPaused = false;
+
 /**
  * Adjusts the canvas for high DPI displays (e.g. Retina).
- * Ensures sharp rendering on all devices.
  * @param {HTMLCanvasElement} canvas 
  * @returns {CanvasRenderingContext2D}
  */
@@ -25,12 +29,8 @@ function adjustCanvasForHDPI(canvas) {
   return ctx;
 }
 
-
-let canvas;
-let world;
-
 function startGame() {
-  canvas = document.getElementById('gameCanvas'); // ✔️ greift auf globale Variable zu
+  canvas = document.getElementById('gameCanvas');
   const ctx = adjustCanvasForHDPI(canvas);
 
   const character = new Character();
@@ -38,6 +38,7 @@ function startGame() {
     character.setImage(character.IMAGES_WALKING[0]);
     character.startWalkingAnimation();
     world = new World(canvas, ctx, character);
+    applyAudioSettings(); // Musik bei Spielstart einstellen
   });
 }
 
@@ -46,29 +47,55 @@ function restartGame() {
 }
 
 function exitGame() {
-  alert("Spiel beendet."); // Oder window.close(); wenn in eigenem Fenster
+  if (confirm("Spiel beenden und zur Startseite zurückkehren?")) {
+    window.location.href = './index.html';
+  }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  const backgroundMusic = new Audio('./audio/spanish-guitar-208363.mp3');
-  backgroundMusic.loop = true;
-  backgroundMusic.volume = 0.4;
-
-  let musicStarted = false;
-
-  function startMusicOnce() {
-    if (!musicStarted) {
-      backgroundMusic.play().catch((e) => {
-        console.warn('🎵 Musik konnte nicht automatisch abgespielt werden:', e);
-      });
-      musicStarted = true;
-    }
+// Musik nur einmal nach Nutzeraktion starten
+function startMusicOnce() {
+  if (!musicStarted && localStorage.getItem('musicEnabled') !== 'false') {
+    backgroundMusic.play().catch((e) => {
+      console.warn('🎵 Musik konnte nicht automatisch abgespielt werden:', e);
+    });
+    musicStarted = true;
   }
+}
 
-  // Erste Benutzeraktion löst Musikstart aus (Klick irgendwo auf der Seite)
-  document.addEventListener('click', startMusicOnce, { once: true });
-  document.addEventListener('keydown', startMusicOnce, { once: true });
+function initOverlayButtons() {
+  const helpBtn = document.getElementById('help-btn');
+  const settingsBtn = document.getElementById('settings-btn');
+  const audioBtn = document.getElementById('audio-btn');
 
+  if (helpBtn) {
+    helpBtn.addEventListener('click', () => openOverlay('./html/help.html'));
+  }
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', () => openOverlay('./html/settings.html'));
+  }
+  if (audioBtn) {
+    audioBtn.addEventListener('click', () => openOverlay('./html/settings.html'));
+  }
+}
+
+function openOverlay(url) {
+  pauseGame();
+  const overlay = document.getElementById('overlay');
+  const frame = document.getElementById('overlay-frame');
+  frame.src = url;
+  overlay.classList.remove('hidden');
+}
+
+function closeOverlay() {
+  const overlay = document.getElementById('overlay');
+  const frame = document.getElementById('overlay-frame');
+  frame.src = '';
+  overlay.classList.add('hidden');
+  applyAudioSettings(); // Audioeinstellungen nach Overlay neu anwenden
+  resumeGame();
+}
+
+function initStartButton() {
   const startButton = document.getElementById('start-btn');
   const startScreen = document.getElementById('start-screen');
   const canvas = document.getElementById('gameCanvas');
@@ -80,23 +107,82 @@ window.addEventListener('DOMContentLoaded', () => {
       startGame();
     });
   }
-});
-  // Neustart auf anderen Seiten
+}
+
+function initRestartButton() {
   const restartButton = document.getElementById('restart-btn');
   if (restartButton) {
     restartButton.addEventListener('click', () => {
       location.href = '../index.html';
     });
   }
-
-
-
-function goBack() {
-  // Beispiel: Zurück zum Startbildschirm oder andere Seite
-  window.location.href = '../index.html';
 }
 
-function wentBack() {
-  // Beispiel: Zurück zum Startbildschirm oder andere Seite
-  window.location.href = './index.html';
+function pauseGame() {
+  if (isPaused) return;
+  isPaused = true;
+  if (world && world.stopGameLoop) {
+    world.stopGameLoop();
+  }
+  // Eingaben blockieren
+  keyboard.LEFT = false;
+  keyboard.RIGHT = false;
+  keyboard.UP = false;
+  keyboard.SPACE = false;
 }
+
+function resumeGame() {
+  if (!isPaused) return;
+  isPaused = false;
+  if (world && world.startGameLoop) {
+    world.startGameLoop();
+  }
+}
+
+function applyAudioSettings() {
+  if (!world) return;
+
+  const musicEnabled = localStorage.getItem('musicEnabled') === 'true';
+  const soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+
+  world.musicEnabled = musicEnabled;
+  world.soundEnabled = soundEnabled;
+
+  if (world.backgroundMusic) {
+    if (musicEnabled) {
+      world.backgroundMusic.muted = false;
+      world.backgroundMusic.play().catch(() => { });
+    } else {
+      world.backgroundMusic.pause();
+      world.backgroundMusic.muted = true;
+    }
+  }
+
+  if (window.backgroundMusic) {
+    if (musicEnabled) {
+      window.backgroundMusic.muted = false;
+      window.backgroundMusic.play().catch(() => { });
+    } else {
+      window.backgroundMusic.pause();
+      window.backgroundMusic.muted = true;
+      window.backgroundMusic.currentTime = 0;
+    }
+  }
+}
+
+// ⬇️ Das hinzufügen – damit settings.html es aufrufen kann
+window.applyAudioSettings = applyAudioSettings;
+
+window.addEventListener('DOMContentLoaded', () => {
+  backgroundMusic = new Audio('../audio/spanish-guitar-208363.mp3');
+  backgroundMusic.loop = true;
+  backgroundMusic.volume = 0.4;
+  window.backgroundMusic = backgroundMusic; // global verfügbar
+
+  document.addEventListener('click', startMusicOnce, { once: true });
+  document.addEventListener('keydown', startMusicOnce, { once: true });
+
+  initOverlayButtons();
+  initStartButton();
+  initRestartButton();
+});
