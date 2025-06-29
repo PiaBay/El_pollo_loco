@@ -65,7 +65,7 @@ class Endboss extends MovableObject {
         this.y = 180;
         this.width = 250;
         this.height = 300;
-        this.speed = 8;
+        this.speed = 10;
         this.introPositionX = 2600;
 
         this.velocityY = 0;
@@ -237,14 +237,14 @@ class Endboss extends MovableObject {
      * @param {number} amount - Amount of damage
      * @param {StatusBar} [statusBar] - Optional custom health bar
      */
-    hit(amount = 30, statusBar = null) {
+    hit(amount = 30) {
         if (this.isDead) return;
-        this.reduceEnergy(amount, statusBar);
+        this.energy = Math.max(0, this.energy - amount);
+        this.statusBarManager?.updateBossHealth(this.energy);
         this.lastHitTime = Date.now();
         this.isHurt = true;
         this.isStunned = true;
         if (this.energy <= 0) {
-            console.log('💀 Energie ist 0 → DIE aufrufen!');
             this.die();
         } else {
             this.playHurtAnimation();
@@ -252,12 +252,12 @@ class Endboss extends MovableObject {
     }
 
 
+
     /** Reduces energy and updates health bar. */
-    reduceEnergy(amount, statusBar) {
+    reduceEnergy(amount) {
         this.energy = Math.max(0, this.energy - amount);
         console.log('⚡ Boss energy after hit:', this.energy);
-        const bar = statusBar || this.bossHealthBar;
-        bar?.setPercentage(this.energy);
+        this.statusBarManager?.updateBossHealth(this.energy);
     }
 
 
@@ -325,8 +325,9 @@ class Endboss extends MovableObject {
             this.startAttacking();
             character.takeDamage(20);
             this.lastAttackTime = now;
-            this.updateCharacterStatusBar(character);
+            this.world.statusBarManager.updateCharacterHealth();
             this.phase = 'retreat';
+            this.world.bossFocusActive = true; // ✅ Kamera auf Boss
             this.stopWalkingAnimation();
         }
     }
@@ -338,26 +339,26 @@ class Endboss extends MovableObject {
     }
 
 
-/** Updates character energy bar. */
-    updateCharacterStatusBar(character) {
-        this.world?.statusBar?.setEnergy(character.energy);
-    }
+    /**
+     * Moves the boss back until the edge of the visible camera area.
+     * Once reached, stops and faces the character.
+     */
+    moveBackToIntroPosition() {
+        const pepe = this.world.character;
+        const stopX = pepe.x + 720; // oder 680, je nach Abstand
 
+        console.log('[Endboss retreat]', { x: this.x, stopX });
 
-/**
- * Moves the boss back to its initial intro position.
- * When reached, switches to 'wait' phase and replays the intro.
- */
-moveBackToIntroPosition() {
-        if (this.x < this.introPositionX) {
+        if (this.x < stopX) {
             this.x += this.speed;
-            this.otherDirection = true;
+            this.otherDirection = true; // läuft weg von Pepe
             this.startWalkingAnimation();
         } else {
             this.stopWalkingAnimation();
+            this.otherDirection = false; // dreht sich zu Pepe
             this.phase = 'wait';
             this.introPlayed = false;
-            this.startIntroAnimation(); 
+            this.startIntroAnimation();
         }
     }
 
@@ -368,15 +369,9 @@ moveBackToIntroPosition() {
         console.log('☠️ DIE was called!');
         this.isDead = true;
         this.stopCurrentAnimation();
-        this.updateHealthBarToZero();
+        this.world.statusBarManager.updateBossHealth(0);
         this.prepareDeathFall();
         this.playDeathAnimation();
-    }
-
-
-/** Sets health bar to 0. */
-    updateHealthBarToZero() {
-        this.bossHealthBar?.setPercentage(0);
     }
 
 
@@ -407,6 +402,6 @@ moveBackToIntroPosition() {
             } else {
                 clearInterval(interval);
             }
-        }, 300);
+        }, 400);
     }
 }

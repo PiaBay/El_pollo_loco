@@ -243,19 +243,29 @@ class Character extends MovableObject {
         }, 150);
     }
 
+
     throwBottle(world) {
-        if (world.availableBottles <= 0) return;
-        if (world.bossActivated && world.endboss.isHurt) return;
+        if (world.gameManager.availableBottles <= 0) return;
+
+        const boss = world.endbossController?.endboss;
+        if (world.gameManager.bossActivated && boss?.isHurt) return;
 
         this.interruptIdleAndMarkActive();
+
         const bottle = new ThrowableObject(this.x + 30, this.y, this.otherDirection);
-        world.throwables.push(bottle);
-        world.availableBottles--;
+        world.gameManager.throwables.push(bottle);
+        world.gameManager.availableBottles--;
 
-        world.bottleStatusBar.setBottles(world.availableBottles, world.totalBottles);
+        world.statusBarManager.updateBottles(
+            world.gameManager.availableBottles,
+            world.gameManager.maxBottleCapacity
+        );
 
-        if (world.throwSound) world.throwSound.play();
+        if (world.audio) {
+            world.audio.play('throw');
+        }
     }
+
 
 
     die() {
