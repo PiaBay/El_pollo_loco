@@ -19,9 +19,11 @@ class InputHandler {
     }
 
     setKey(key, isPressed) {
+        if (isPressed && !this.world.gameManager.characterCanMove && ['ArrowRight', 'ArrowLeft'].includes(key)) {
+            return;
+        }
         switch (key) {
             case 'ArrowRight':
-                console.log('Pressed:', key); // ✅ Debug-Ausgabe
                 this.keys.RIGHT = isPressed;
                 break;
             case 'ArrowLeft':
@@ -59,9 +61,11 @@ class InputHandler {
     }
 
     isPressed(direction) {
+        if (!this.world.gameManager.characterCanMove && ['LEFT', 'RIGHT'].includes(direction)) {
+            return false;
+        }
         return this.keys[direction];
     }
-
     resetKeys() {
         for (let key in this.keys) {
             this.keys[key] = false;
