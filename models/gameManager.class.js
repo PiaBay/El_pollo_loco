@@ -65,16 +65,9 @@ class GameManager {
     /** Checks end conditions for character or boss death. */
     checkEndConditions() {
         const characterDead = this.world.character.isDead && this.world.character.y > 500;
-        const bossDead = this.world.endbossController.endboss?.isDead &&
-            this.world.endbossController.endboss.y > 500;
 
         if (characterDead && !this.world.gameOverHandled) {
             this.handleGameEnd(false);
-            return true;
-        }
-
-        if (bossDead && !this.world.gameOverHandled) {
-            this.handleGameEnd(true);
             return true;
         }
 

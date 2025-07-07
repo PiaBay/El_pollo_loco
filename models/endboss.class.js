@@ -245,6 +245,16 @@ class Endboss extends MovableObject {
         this.lastHitTime = Date.now();
         this.isHurt = true;
         this.isStunned = true;
+
+        this.phase = 'retreat';
+
+        // 🔁 Optional: Nach kurzer Zeit zurück zur "attack"-Phase
+        setTimeout(() => {
+            if (!this.isDead && !this.isHurt) {
+                this.phase = 'attack';
+            }
+        }, 1200);
+
         if (this.energy <= 0) {
             this.die();
         } else {
@@ -363,14 +373,24 @@ class Endboss extends MovableObject {
 
 
 /** Handles death animation and fall. */
+    /** Handles death animation and triggers fall and end screen. */
     die() {
         if (this.isDead) return;
+
         this.isDead = true;
         this.stopCurrentAnimation();
         this.world.statusBarManager.updateBossHealth(0);
-        this.prepareDeathFall();
-        this.playDeathAnimation();
+        this.velocityY = 0; // Setze den Startwert für den Fall
+        this.gravity = 0.8;
+
+        // Animation und Fall durchlaufen, dann Endscreen anzeigen
+        this.playDeathAnimation(() => {
+            this.world.gameManager.handleGameEnd(true);
+        });
     }
+
+
+
 
 
 /** Stops animation interval and resets state. */
@@ -381,25 +401,46 @@ class Endboss extends MovableObject {
         this.currentImage = 0;
     }
 
-
-/** Enables falling after death. */
+    /** Enables falling after death. */
     prepareDeathFall() {
-        this.velocityY = -5;
-        this.vxAfterDeath = 3;
+        this.velocityY = -2;     // 🟢 Weniger Sprungkraft
+        this.gravity = 0.2;      // 🟢 Sanftere Beschleunigung
+        this.vxAfterDeath = 1.5; // optional für seitliches Wegdriften
         this.fallAfterDeath = true;
     }
 
 
+
 /** Plays death animation frames. */
-    playDeathAnimation() {
+    /**
+     * Plays death animation frames and triggers falling afterward.
+     * @param {Function} [onComplete] - Optional callback after boss has fallen out of view.
+     */
+    playDeathAnimation(onComplete) {
         let frame = 0;
-        const interval = setInterval(() => {
+
+        const animationInterval = setInterval(() => {
             if (frame < this.IMAGES_DIE.length) {
                 this.setImage(this.IMAGES_DIE[frame]);
                 frame++;
             } else {
-                clearInterval(interval);
+                clearInterval(animationInterval);
+
+                // Starte Fall nach Animation
+                this.fallAfterDeath = true;
+
+                // Warte bis der Boss ganz unten ist (aus dem Canvas gefallen)
+                const fallInterval = setInterval(() => {
+                    this.y += this.velocityY;
+                    this.velocityY += this.gravity;
+
+                    if (this.y > 600) { // Etwas über Canvas-Höhe hinaus
+                        clearInterval(fallInterval);
+                        onComplete?.(); // ✅ Endscreen auslösen
+                    }
+                }, 50);
             }
         }, 400);
     }
+
 }

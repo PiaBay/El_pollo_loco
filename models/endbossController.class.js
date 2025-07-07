@@ -29,21 +29,23 @@ class EndbossController {
         }
     }
 
-    /** Activates the Endboss, sets handlers, and locks camera/player. */
     activate() {
         this.endboss = new Endboss();
         this.endboss.world = this.world;
         this.endboss.statusBarManager = this.world.statusBarManager;
 
+        this.endboss.onIntroStart = () => this.handleIntroStart(); // 👈 jetzt zuerst
+        this.endboss.onIntroEnd = () => this.handleIntroEnd();
+
         this.world.endboss = this.endboss;
         this.world.bossActivated = true;
-        this.bossFocusActive = true; // 👉 Damit Kamera auf Boss geht!
+        this.bossFocusActive = true;
         this.world.statusBarManager.showBossHealthBar = true;
         this.world.audio.play('bossIntro');
         this.lockCameraAndCharacter();
 
-        this.endboss.onIntroStart = () => this.handleIntroStart();
-        this.endboss.onIntroEnd = () => this.handleIntroEnd();
+        // 👇 Intro direkt starten (z. B. ohne moveLeft zuerst)
+        this.endboss.startIntroAnimation();
     }
 
     /** Locks player and camera during intro. */
@@ -55,7 +57,7 @@ class EndbossController {
 
     /** Called at the start of the Endboss intro. */
     handleIntroStart() {
-        this.world.chickens = [];
+        this.world.gameManager.chickens = [];
         this.world.character.longIdlePermanentlyDisabled = true;
         this.world.preventIdle = true;
     }
@@ -82,6 +84,8 @@ class EndbossController {
         if (boss.fallAfterDeath) {
             boss.y += boss.velocityY;
             boss.velocityY += boss.gravity;
+
+            boss.rotationAngle += 0.05; // 🔁 Boss dreht sich langsam beim Fallen
         }
 
         this.world.addToMap(boss);

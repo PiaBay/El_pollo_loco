@@ -37,8 +37,6 @@ class CharacterController {
      * Handles keyboard input for movement.
      */
     handleMovementInput() {
-        console.log('RIGHT allowed?', this.inputHandler.isPressed('RIGHT'));
-
         if (this.inputHandler.isPressed('RIGHT')) {
             this.character.moveRight();
         } else if (this.inputHandler.isPressed('LEFT')) {

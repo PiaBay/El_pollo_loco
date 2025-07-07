@@ -107,7 +107,10 @@ class World {
             if (b.x < this.character.x + this.canvas.width) {
                 b.move();
             }
-        });        this.addObjectsToMap(this.gameManager.chickens);
+        });        
+        if (!this.endbossController?.endboss?.isIntroRunning) {
+            this.addObjectsToMap(this.gameManager.chickens);
+        }
 
         const boss = this.endbossController.endboss;
         if (this.bossActivated && boss && !this.gameOverHandled) {
@@ -190,9 +193,8 @@ class World {
 
             if (this.bossActivated && collides) {
                 this.audio.play('bossHit');
-                boss.hit(30);
-                this.statusBarManager.updateBossHealth(boss.energy);
-                return false;
+                boss.hit(30); // Endboss reagiert inkl. Rücklauf
+                return false; // Flasche verschwindet
             }
 
             return bottle.x <= this.character.x + 720;
@@ -210,20 +212,31 @@ class World {
     /**
      * Draws a single object, flipped if facing left.
      * @param {MovableObject} mo - Movable object to render.
-     */
+     **/
     addToMap(mo) {
-        if (mo.img && mo.img.complete && mo.img.naturalWidth > 0) {
-            if (mo.otherDirection) {
-                this.ctx.save();
-                this.ctx.translate(mo.x + mo.width, 0);
-                this.ctx.scale(-1, 1);
-                this.ctx.drawImage(mo.img, 0, mo.y, mo.width, mo.height);
-                this.ctx.restore();
-            } else {
-                this.ctx.drawImage(mo.img, mo.x, mo.y, mo.width, mo.height);
-            }
+        if (!mo.img) return;
+        const isFlipped = mo.otherDirection;
+
+        if (mo instanceof Endboss && mo.isDead && mo.fallAfterDeath) {
+            // Optional: Spezialfall für Todesrotation
+            this.ctx.save();
+            const cx = mo.x + mo.width / 2;
+            const cy = mo.y + mo.height / 2;
+            this.ctx.translate(cx, cy);
+            this.ctx.rotate(0.3);
+            this.ctx.drawImage(mo.img, -mo.width / 2, -mo.height / 2, mo.width, mo.height);
+            this.ctx.restore();
+        } else if (isFlipped) {
+            // 👉 gespiegelt zeichnen (z. B. nach rechts schauen)
+            this.ctx.save();
+            this.ctx.scale(-1, 1);
+            this.ctx.drawImage(mo.img, -mo.x - mo.width, mo.y, mo.width, mo.height);
+            this.ctx.restore();
+        } else {
+            this.ctx.drawImage(mo.img, mo.x, mo.y, mo.width, mo.height);
         }
     }
+
 }
 
 window.World = World;

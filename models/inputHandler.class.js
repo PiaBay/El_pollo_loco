@@ -101,6 +101,9 @@ class InputHandler {
     }
 
     handleThrow() {
+        const boss = this.world.endboss;
+        if (boss?.phase === 'retreat') return; // ⛔️ Blockieren wenn Boss zurückläuft
+
         const gm = this.world.gameManager;
         if (gm.availableBottles > 0) {
             this.character.throwBottle(this.world);
@@ -110,13 +113,11 @@ class InputHandler {
                 gm.maxBottleCapacity
             );
         }
-
     }
+
 
     isPressed(direction) {
         const bossIntroActive = this.world.endboss?.isIntroRunning;
-        console.log('isIntroRunning?', this.world.endboss?.isIntroRunning);
-        // Bewegung nach rechts blockieren während Boss-Intro
         if (
             (!this.world.gameManager.characterCanMove && ['LEFT', 'RIGHT'].includes(direction)) ||
             (bossIntroActive && direction === 'RIGHT')
