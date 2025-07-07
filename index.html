@@ -33,42 +33,53 @@
     <script src="./js/game.js"></script>
 </head>
 <body>
-    <div id="start-screen" class="start-end-screen">
-        <h1>El Pollo Loco</h1>
-    
-<div class="start-buttons">
-    <button id="start-btn">
-        <img class="symbols" src="./assets/saloon-3695003_1280.png"><span>START</span>
-    </button>
-
-    <button id="help-btn">
-        <img class="symbols" src="./assets/signpost-308368_1280.png"><span>HILFE</span>
-    </button>
-
-    <button id="settings-btn">
-        <img class="symbols" src="./assets/wagon-wheel-5004284_1280.png"><span>EINSTELLUNG</span>
+<div id="orientation-overlay" class="orientation-overlay hidden">
+  <span>Bitte drehe dein Gerät ins Querformat.</span>
+</div>
+<div class="mobile-controls hidden">
+    <button class="btn-left">←</button>
+    <button class="btn-jump">↑</button>
+    <button class="btn-right">→</button>
+    <button class="btn-throw">
+        <img src="./assets/img_pollo_locco/img/6_salsa_bottle/salsa_bottle.png" alt="Throw Bottle" style="width:24px; height:24px;">
     </button>
 </div>
-    </div>
 
-    <canvas id="gameCanvas" class="hidden"></canvas>
-    <div id="game-controls" class="hidden">
-        <button onclick="exitGame()">Spiel beenden</button>
-        <button onclick="openOverlay('./html/settings.html')">🔊</button>
+<div id="start-screen" class="start-end-screen">
+    <h1>El Pollo Loco</h1>
+    
+    <div class="start-buttons">
+        <button class="start-btn">
+            <img class="symbols" src="./assets/saloon-3695003_1280.png"><span>START</span>
+        </button>
+        
+        <button class="help-btn">
+            <img class="symbols" src="./assets/signpost-308368_1280.png"><span>HILFE</span>
+        </button>
+        
+        <button class="settings-btn">
+            <img class="symbols" src="./assets/wagon-wheel-5004284_1280.png"><span>EINSTELLUNG</span>
+        </button>
     </div>
-    <div id="end-screen" class="hidden start-end-screen">
-        <img id="end-image" src="" alt="Game Result" />
-        <h1 id="end-text"></h1>
-        <button onclick="location.reload()">Zurück zum Startbildschirm</button>
+</div>
+
+<div class="canvas-wrapper">
+    <canvas id="gameCanvas" width="720" height="480"></canvas>
+    <div class="game-controls hidden">
+        <button class="exit-btn" onclick="exitGame()">Spiel beenden</button>
+        <button class="open-settings-btn" onclick="openOverlay('./html/settings.html')">🔊</button>
     </div>
+</div>
+<div id="end-screen" class="end-screen hidden start-end-screen">
+    <img id="end-image" class="end-image" src="" alt="Game Result" />
+    <h1 id="end-text" class="end-text"></h1>
+    <button class="reload-btn" onclick="location.reload()">Zurück zum Startbildschirm</button>
+</div>
 <div id="overlay" class="overlay hidden">
     <div class="overlay-content">
         <button class="close-overlay" onclick="closeOverlay()">✖</button>
-        <iframe id="overlay-frame" src=""></iframe>
+        <iframe class="overlay-frame" src=""></iframe>
     </div>
 </div>
-<script>
-    console.log('AudioManager:', typeof AudioManager);
-</script>
 </body>
 </html>

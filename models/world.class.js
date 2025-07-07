@@ -21,12 +21,14 @@ class World {
 
         this.character = character;
         this.character.world = this;
-
+        this.gameManager = new GameManager(this, this.audio);
         this.endbossController = new EndbossController(this);
-        this.statusBarManager = new StatusBarManager(this.character);
+        this.statusBarManager = new StatusBarManager(
+            this.character,
+            this.gameManager,
+        );
         this.inputHandler = new InputHandler(this.character, this);
         this.characterController = new CharacterController(this.character, this, this.inputHandler);
-        this.gameManager = new GameManager(this, this.audio);
         this.gameManager.loadLevelContent();
         this.gameManager.initLevelItems();
         this.draw();
@@ -36,6 +38,13 @@ class World {
      * Starts the game loop and continuously renders the game.
      */
     draw() {
+        if (!window.frameCount) {
+            window.frameCount = 0;
+            setInterval(() => {
+                window.frameCount = 0;
+            }, 1000);
+        }
+        window.frameCount++;
         if (this.gameOverHandled) return;
 
         this.character.applyGravity();
@@ -58,6 +67,7 @@ class World {
         this.updateWorldState();
         if (this.gameManager.checkEndConditions()) return;
         this.drawWorldObjects();
+
     }
 
     /**
@@ -93,8 +103,11 @@ class World {
         this.addObjectsToMap(this.gameManager.coins);
         this.addObjectsToMap(this.gameManager.bottles);
         this.addObjectsToMap(this.gameManager.throwables);
-        this.gameManager.throwables.forEach(b => b.move());
-        this.addObjectsToMap(this.gameManager.chickens);
+        this.gameManager.throwables.forEach(b => {
+            if (b.x < this.character.x + this.canvas.width) {
+                b.move();
+            }
+        });        this.addObjectsToMap(this.gameManager.chickens);
 
         const boss = this.endbossController.endboss;
         if (this.bossActivated && boss && !this.gameOverHandled) {

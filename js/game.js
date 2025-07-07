@@ -30,8 +30,65 @@ function adjustCanvasForHDPI(canvas) {
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   return ctx;
 }
+
+/**
+ * Checks device orientation and shows/hides overlay and canvas accordingly.
+ */
+function checkOrientation() {
+  const overlay = document.querySelector('.orientation-overlay');
+  const canvas = document.querySelector('#gameCanvas');
+
+  if (window.innerWidth < 320 || window.innerHeight > window.innerWidth) {
+    // Overlay zeigen, Canvas verstecken
+    overlay.classList.add('visible');
+    overlay.classList.remove('hidden');
+
+    canvas.classList.add('hidden');
+    canvas.classList.remove('canvas-visible');
+  } else {
+    // Overlay verstecken, Canvas zeigen
+    overlay.classList.add('hidden');
+    overlay.classList.remove('visible');
+
+    canvas.classList.remove('hidden');
+    canvas.classList.add('canvas-visible');
+  }
+}
+
+/**
+ * Initialisiert alle Touch-Button EventListener (nur wenn die Buttons existieren).
+ */
+function initMobileControls() {
+  const btnLeft = document.querySelector('.btn-left');
+  const btnRight = document.querySelector('.btn-right');
+  const btnJump = document.querySelector('.btn-jump');
+  const btnThrow = document.querySelector('.btn-throw');
+
+  if (btnLeft) {
+    btnLeft.addEventListener('touchstart', () => { keyboard.LEFT = true; });
+    btnLeft.addEventListener('touchend', () => { keyboard.LEFT = false; });
+  }
+
+  if (btnRight) {
+    btnRight.addEventListener('touchstart', () => { keyboard.RIGHT = true; });
+    btnRight.addEventListener('touchend', () => { keyboard.RIGHT = false; });
+  }
+
+  if (btnJump) {
+    btnJump.addEventListener('touchstart', () => { keyboard.UP = true; });
+    btnJump.addEventListener('touchend', () => { keyboard.UP = false; });
+  }
+
+  if (btnThrow) {
+    btnThrow.addEventListener('touchstart', () => { keyboard.SPACE = true; });
+    btnThrow.addEventListener('touchend', () => { keyboard.SPACE = false; });
+  }
+}
+
 function startGame() {
-  canvas = document.getElementById('gameCanvas');
+  canvas = document.querySelector('#gameCanvas');
+  document.querySelector('.game-controls')?.classList.remove('hidden');
+
   const ctx = adjustCanvasForHDPI(canvas);
 
   const character = new Character();
@@ -41,12 +98,10 @@ function startGame() {
 
     world = new World(canvas, ctx, character, window.audio);
 
-    applyAudioSettings();        
+    applyAudioSettings();
     window.audio.play('gameMusic'); // ✅ korrekt
   });
 }
-
-
 
 function restartGame() {
   location.reload();
@@ -68,11 +123,10 @@ function startMusicOnce() {
   }
 }
 
-
 function initOverlayButtons() {
-  const helpBtn = document.getElementById('help-btn');
-  const settingsBtn = document.getElementById('settings-btn');
-  const audioBtn = document.getElementById('audio-btn');
+  const helpBtn = document.querySelector('.help-btn');
+  const settingsBtn = document.querySelector('.settings-btn');
+  const audioBtn = document.querySelector('.audio-btn');
 
   if (helpBtn) {
     helpBtn.addEventListener('click', () => openOverlay('./html/help.html'));
@@ -87,15 +141,15 @@ function initOverlayButtons() {
 
 function openOverlay(url) {
   pauseGame();
-  const overlay = document.getElementById('overlay');
-  const frame = document.getElementById('overlay-frame');
+  const overlay = document.querySelector('.overlay');
+  const frame = document.querySelector('.overlay-frame');
   frame.src = url;
   overlay.classList.remove('hidden');
 }
 
 function closeOverlay() {
-  const overlay = document.getElementById('overlay');
-  const frame = document.getElementById('overlay-frame');
+  const overlay = document.querySelector('.overlay');
+  const frame = document.querySelector('.overlay-frame');
   frame.src = '';
   overlay.classList.add('hidden');
   applyAudioSettings(); // Audioeinstellungen nach Overlay neu anwenden
@@ -103,9 +157,9 @@ function closeOverlay() {
 }
 
 function initStartButton() {
-  const startButton = document.getElementById('start-btn');
-  const startScreen = document.getElementById('start-screen');
-  const canvas = document.getElementById('gameCanvas');
+  const startButton = document.querySelector('.start-btn');
+  const startScreen = document.querySelector('.start-end-screen');
+  const canvas = document.querySelector('#gameCanvas');
 
   if (startButton && startScreen && canvas) {
     startButton.addEventListener('click', () => {
@@ -123,7 +177,7 @@ function initStartButton() {
 }
 
 function initRestartButton() {
-  const restartButton = document.getElementById('restart-btn');
+  const restartButton = document.querySelector('.restart-btn');
   if (restartButton) {
     restartButton.addEventListener('click', () => {
       location.href = '../index.html';
@@ -152,7 +206,7 @@ function resumeGame() {
 }
 
 function applyAudioSettings() {
-  const isStartScreenVisible = !document.getElementById('start-screen')?.classList.contains('hidden');
+  const isStartScreenVisible = !document.querySelector('.start-end-screen')?.classList.contains('hidden');
 
   if (window.audio) {
     window.audio.applySettingsBasedOnState(isStartScreenVisible);
@@ -175,4 +229,11 @@ window.addEventListener('DOMContentLoaded', () => {
   initOverlayButtons();
   initStartButton();
   initRestartButton();
+  initMobileControls();
+
+  // === Hier dein Orientation-Check ===
+  checkOrientation(); // gleich beim Laden prüfen
+
+  window.addEventListener('resize', checkOrientation);
+  window.addEventListener('orientationchange', checkOrientation);
 });

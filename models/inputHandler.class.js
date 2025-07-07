@@ -11,12 +11,65 @@ class InputHandler {
         };
 
         this.setupListeners();
+        this.setupMobileControls();
     }
 
     setupListeners() {
         window.addEventListener('keydown', (e) => this.setKey(e.key, true));
         window.addEventListener('keyup', (e) => this.setKey(e.key, false));
     }
+
+
+    setupMobileControls() {
+        const btnLeft = document.querySelector('.btn-left');
+        const btnRight = document.querySelector('.btn-right');
+        const btnJump = document.querySelector('.btn-jump');
+        const btnThrow = document.querySelector('.btn-throw');
+
+        if (!btnLeft || !btnRight || !btnJump || !btnThrow) return;
+
+        // Hilfsfunktion zum Zurücksetzen aller Keys
+        const resetKeys = () => {
+            this.setKey('ArrowLeft', false);
+            this.setKey('ArrowRight', false);
+            this.setKey('ArrowUp', false);
+            this.setKey(' ', false);
+        };
+
+        // ⬅️ Links
+        btnLeft.addEventListener('pointerdown', () => {
+            resetKeys();
+            this.setKey('ArrowLeft', true);
+        });
+        btnLeft.addEventListener('pointerup', () => this.setKey('ArrowLeft', false));
+        btnLeft.addEventListener('pointerleave', () => this.setKey('ArrowLeft', false));
+
+        // ➡️ Rechts
+        btnRight.addEventListener('pointerdown', () => {
+            resetKeys();
+            this.setKey('ArrowRight', true);
+        });
+        btnRight.addEventListener('pointerup', () => this.setKey('ArrowRight', false));
+        btnRight.addEventListener('pointerleave', () => this.setKey('ArrowRight', false));
+
+        // ⬆️ Springen
+        btnJump.addEventListener('pointerdown', () => {
+            resetKeys();
+            this.setKey('ArrowUp', true);
+        });
+        btnJump.addEventListener('pointerup', () => this.setKey('ArrowUp', false));
+        btnJump.addEventListener('pointerleave', () => this.setKey('ArrowUp', false));
+
+        // 🧴 Werfen
+        btnThrow.addEventListener('pointerdown', () => {
+            resetKeys();
+            this.setKey(' ', true);
+        });
+        btnThrow.addEventListener('pointerup', () => this.setKey(' ', false));
+        btnThrow.addEventListener('pointerleave', () => this.setKey(' ', false));
+    }
+
+
 
     setKey(key, isPressed) {
         if (isPressed && !this.world.gameManager.characterCanMove && ['ArrowRight', 'ArrowLeft'].includes(key)) {
@@ -61,11 +114,21 @@ class InputHandler {
     }
 
     isPressed(direction) {
-        if (!this.world.gameManager.characterCanMove && ['LEFT', 'RIGHT'].includes(direction)) {
+        const bossIntroActive = this.world.endboss?.isIntroRunning;
+        console.log('isIntroRunning?', this.world.endboss?.isIntroRunning);
+        // Bewegung nach rechts blockieren während Boss-Intro
+        if (
+            (!this.world.gameManager.characterCanMove && ['LEFT', 'RIGHT'].includes(direction)) ||
+            (bossIntroActive && direction === 'RIGHT')
+        ) {
             return false;
         }
+
         return this.keys[direction];
     }
+
+
+
     resetKeys() {
         for (let key in this.keys) {
             this.keys[key] = false;

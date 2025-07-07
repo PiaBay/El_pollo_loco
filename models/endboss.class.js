@@ -92,6 +92,7 @@ class Endboss extends MovableObject {
     /** Starts the boss intro animation. */
     startIntroAnimation() {
         if (this.introPlayed || this.isIntroRunning) return;
+        this.world.inputHandler?.resetKeys?.(); 
 
         this.isIntroRunning = true;
         this.introPlayed = true;
@@ -122,7 +123,7 @@ class Endboss extends MovableObject {
         this.phase = 'attack';
         this.startWalkingAnimation();
         this.onIntroEnd?.();
-        this.speed = 5;
+        this.speed = 8;
     }
 
 
@@ -256,7 +257,6 @@ class Endboss extends MovableObject {
     /** Reduces energy and updates health bar. */
     reduceEnergy(amount) {
         this.energy = Math.max(0, this.energy - amount);
-        console.log('⚡ Boss energy after hit:', this.energy);
         this.statusBarManager?.updateBossHealth(this.energy);
     }
 
@@ -347,7 +347,6 @@ class Endboss extends MovableObject {
         const pepe = this.world.character;
         const stopX = pepe.x + 720; // oder 680, je nach Abstand
 
-        console.log('[Endboss retreat]', { x: this.x, stopX });
 
         if (this.x < stopX) {
             this.x += this.speed;
@@ -366,7 +365,6 @@ class Endboss extends MovableObject {
 /** Handles death animation and fall. */
     die() {
         if (this.isDead) return;
-        console.log('☠️ DIE was called!');
         this.isDead = true;
         this.stopCurrentAnimation();
         this.world.statusBarManager.updateBossHealth(0);
