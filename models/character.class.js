@@ -200,7 +200,7 @@ class Character extends MovableObject {
         this.isInLongIdle = true;
         this.currentImage = 0;
         clearInterval(this.animationInterval);
-
+        this.world.audio.play('longIdle');
         const images = this.IMAGES_LONG_IDLE;
         let frame = 0;
 

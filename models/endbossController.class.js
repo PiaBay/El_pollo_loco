@@ -57,6 +57,9 @@ class EndbossController {
 
     /** Called at the start of the Endboss intro. */
     handleIntroStart() {
+        this.world.statusBarManager.showBossHealthBar = true;
+        this.world.statusBarManager.updateBossHealth(this.world.endboss.energy);
+
         this.world.gameManager.chickens = [];
         this.world.character.longIdlePermanentlyDisabled = true;
         this.world.preventIdle = true;

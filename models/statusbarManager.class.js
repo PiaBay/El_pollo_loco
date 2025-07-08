@@ -9,18 +9,21 @@ class StatusBarManager {
         this.bossHealthBar = new EndbossStatusBar();
         this.showBossHealthBar = false;
 
-        // Icons für Kompaktmodus
         this.heartIcon = new Image();
         this.heartIcon.src = './assets/img_pollo_locco/img/7_statusbars/3_icons/icon_health.png';
+        this.heartIcon.onload = () => console.log('✅ heartIcon geladen');
 
         this.coinIcon = new Image();
         this.coinIcon.src = './assets/img_pollo_locco/img/7_statusbars/3_icons/icon_coin.png';
+        this.coinIcon.onload = () => console.log('✅ coinIcon geladen');
 
         this.bottleIcon = new Image();
         this.bottleIcon.src = './assets/img_pollo_locco/img/7_statusbars/3_icons/icon_salsa_bottle.png';
+        this.bottleIcon.onload = () => console.log('✅ bottleIcon geladen');
 
         this.bossIcon = new Image();
         this.bossIcon.src = './assets/img_pollo_locco/img/7_statusbars/3_icons/icon_health_endboss.png';
+        this.bossIcon.onload = () => console.log('✅ bossIcon geladen');
     }
 
 
@@ -38,17 +41,20 @@ class StatusBarManager {
 
     updateBossHealth(currentEnergy) {
         this.bossHealthBar.setPercentage(currentEnergy);
+        this.bossHealthBar.energy = currentEnergy; // 🔧 manuell setzen!
     }
-
-    drawCompactIcon(ctx, icon, value, x, y, iconSize, lastValueKey) {
+    drawCompactIcon(ctx, icon, value, x, y, iconSize, lastValueKey, scale = 1, fontSize = 18) {
         if (!this.lastDrawn) this.lastDrawn = {};
-        if (this.lastDrawn[lastValueKey] === value) return;
 
-        // Nur wenn Bild geladen
         if (icon.complete && icon.naturalWidth > 0) {
             ctx.drawImage(icon, x, y, iconSize, iconSize);
         }
-        ctx.fillText(`${value}`, x + iconSize + 4, y + 20);
+
+        ctx.fillStyle = 'white';
+        ctx.font = `bold ${fontSize}px Arial`;
+        ctx.fillText(`${value}`, x + iconSize + 4, y + iconSize / 1.5);
+
+        // 👇 Immer erst nach dem Zeichnen speichern!
         this.lastDrawn[lastValueKey] = value;
     }
 
@@ -57,7 +63,6 @@ class StatusBarManager {
         const isCompact = window.innerWidth <= 700;
 
         if (!isCompact) {
-            // Standard-Modus: große Statusbars zeichnen
             this.statusBar.draw(ctx);
             this.coinStatusBar.draw(ctx);
             this.bottleStatusBar.draw(ctx);
@@ -65,22 +70,19 @@ class StatusBarManager {
                 this.bossHealthBar.draw(ctx);
             }
         } else {
-            // Kompaktmodus: Icons + Zahlen zeichnen
-            const iconSize = 28;
-            const spacingX = 70;
-            const baseX = 80;
-            const baseY = 50;
+            const iconSize = 70;
+            const spacingX = 130;
+            const baseX = 20;
+            const baseY = 25;
+            const scale = ctx.canvas.width / parseInt(ctx.canvas.style.width);
+            const fontSize = 18 * scale;
 
-            ctx.font = 'bold 18px Arial';
-            ctx.fillStyle = 'white';
-
-            this.drawCompactIcon(ctx, this.heartIcon, this.character.energy, baseX, baseY, iconSize, 'energy');
-            this.drawCompactIcon(ctx, this.coinIcon, this.gameManager.collectedCoins, baseX + spacingX, baseY, iconSize, 'coins');
-            this.drawCompactIcon(ctx, this.bottleIcon, this.gameManager.availableBottles, baseX + spacingX * 2, baseY, iconSize, 'bottles');
-
+            this.drawCompactIcon(ctx, this.heartIcon, this.character.energy, baseX, baseY, iconSize, 'energy', scale, fontSize);
+            this.drawCompactIcon(ctx, this.coinIcon, this.gameManager.collectedCoins, baseX + spacingX, baseY, iconSize, 'coins', scale, fontSize);
+            this.drawCompactIcon(ctx, this.bottleIcon, this.gameManager.availableBottles, baseX + spacingX * 2, baseY, iconSize, 'bottles', scale, fontSize);
             if (this.showBossHealthBar && this.bossHealthBar.energy !== undefined) {
-                this.drawCompactIcon(ctx, this.bossIcon, this.bossHealthBar.energy, baseX + spacingX * 3, baseY, iconSize, 'boss');
+                this.drawCompactIcon(ctx, this.bossIcon, this.bossHealthBar.energy, baseX + spacingX * 3, baseY, iconSize, 'boss', scale, fontSize);
             }
         }
     }
-    }
+}

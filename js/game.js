@@ -37,19 +37,14 @@ function adjustCanvasForHDPI(canvas) {
 function checkOrientation() {
   const overlay = document.querySelector('.orientation-overlay');
   const canvas = document.querySelector('#gameCanvas');
-
   if (window.innerWidth < 320 || window.innerHeight > window.innerWidth) {
-    // Overlay zeigen, Canvas verstecken
     overlay.classList.add('visible');
     overlay.classList.remove('hidden');
-
     canvas.classList.add('hidden');
     canvas.classList.remove('canvas-visible');
   } else {
-    // Overlay verstecken, Canvas zeigen
     overlay.classList.add('hidden');
     overlay.classList.remove('visible');
-
     canvas.classList.remove('hidden');
     canvas.classList.add('canvas-visible');
   }
@@ -63,22 +58,18 @@ function initMobileControls() {
   const btnRight = document.querySelector('.btn-right');
   const btnJump = document.querySelector('.btn-jump');
   const btnThrow = document.querySelector('.btn-throw');
-
   if (btnLeft) {
     btnLeft.addEventListener('touchstart', () => { keyboard.LEFT = true; });
     btnLeft.addEventListener('touchend', () => { keyboard.LEFT = false; });
   }
-
   if (btnRight) {
     btnRight.addEventListener('touchstart', () => { keyboard.RIGHT = true; });
     btnRight.addEventListener('touchend', () => { keyboard.RIGHT = false; });
   }
-
   if (btnJump) {
     btnJump.addEventListener('touchstart', () => { keyboard.UP = true; });
     btnJump.addEventListener('touchend', () => { keyboard.UP = false; });
   }
-
   if (btnThrow) {
     btnThrow.addEventListener('touchstart', () => { keyboard.SPACE = true; });
     btnThrow.addEventListener('touchend', () => { keyboard.SPACE = false; });
@@ -88,18 +79,14 @@ function initMobileControls() {
 function startGame() {
   canvas = document.querySelector('#gameCanvas');
   document.querySelector('.game-controls')?.classList.remove('hidden');
-
   const ctx = adjustCanvasForHDPI(canvas);
-
   const character = new Character();
   character.loadImages(character.IMAGES_WALKING, () => {
     character.setImage(character.IMAGES_WALKING[0]);
     character.startWalkingAnimation();
-
     world = new World(canvas, ctx, character, window.audio);
-
     applyAudioSettings();
-    window.audio.play('gameMusic'); // ✅ korrekt
+    window.audio.play('gameMusic');
   });
 }
 
@@ -107,13 +94,14 @@ function restartGame() {
   location.reload();
 }
 
+
 function exitGame() {
   if (confirm("Spiel beenden und zur Startseite zurückkehren?")) {
     window.location.href = './index.html';
   }
 }
 
-// Musik nur einmal nach Nutzeraktion starten
+
 function startMusicOnce() {
   if (!musicStarted && localStorage.getItem('musicEnabled') !== 'false') {
     if (window.audio) {
@@ -123,11 +111,11 @@ function startMusicOnce() {
   }
 }
 
+
 function initOverlayButtons() {
   const helpBtn = document.querySelector('.help-btn');
   const settingsBtn = document.querySelector('.settings-btn');
   const audioBtn = document.querySelector('.audio-btn');
-
   if (helpBtn) {
     helpBtn.addEventListener('click', () => openOverlay('./html/help.html'));
   }
@@ -139,6 +127,7 @@ function initOverlayButtons() {
   }
 }
 
+
 function openOverlay(url) {
   pauseGame();
   const overlay = document.querySelector('.overlay');
@@ -147,34 +136,33 @@ function openOverlay(url) {
   overlay.classList.remove('hidden');
 }
 
+
 function closeOverlay() {
   const overlay = document.querySelector('.overlay');
   const frame = document.querySelector('.overlay-frame');
   frame.src = '';
   overlay.classList.add('hidden');
-  applyAudioSettings(); // Audioeinstellungen nach Overlay neu anwenden
+  applyAudioSettings();
   resumeGame();
 }
+
 
 function initStartButton() {
   const startButton = document.querySelector('.start-btn');
   const startScreen = document.querySelector('.start-end-screen');
   const canvas = document.querySelector('#gameCanvas');
-
   if (startButton && startScreen && canvas) {
     startButton.addEventListener('click', () => {
-      // Menü-Musik beenden (mit AudioManager)
       if (window.audio) {
         window.audio.stop('menuMusic');
       }
-
       startScreen.classList.add('hidden');
       canvas.classList.remove('hidden');
-
-      startGame(); // <- ruft intern applyAudioSettings auf
+      startGame();
     });
   }
 }
+
 
 function initRestartButton() {
   const restartButton = document.querySelector('.restart-btn');
@@ -184,6 +172,7 @@ function initRestartButton() {
     });
   }
 }
+
 
 function pauseGame() {
   if (isPaused) return;
@@ -205,13 +194,12 @@ function resumeGame() {
   }
 }
 
+
 function applyAudioSettings() {
   const isStartScreenVisible = !document.querySelector('.start-end-screen')?.classList.contains('hidden');
-
   if (window.audio) {
     window.audio.applySettingsBasedOnState(isStartScreenVisible);
   }
-
   if (world) {
     world.musicEnabled = window.audio.musicEnabled;
     world.soundEnabled = window.audio.soundEnabled;
@@ -219,10 +207,8 @@ function applyAudioSettings() {
 }
 
 window.applyAudioSettings = applyAudioSettings;
-
 window.addEventListener('DOMContentLoaded', () => {
   window.audio = new AudioManager();
-
   document.addEventListener('click', startMusicOnce, { once: true });
   document.addEventListener('keydown', startMusicOnce, { once: true });
 
@@ -230,9 +216,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initStartButton();
   initRestartButton();
   initMobileControls();
-
-  // === Hier dein Orientation-Check ===
-  checkOrientation(); // gleich beim Laden prüfen
+  checkOrientation();
 
   window.addEventListener('resize', checkOrientation);
   window.addEventListener('orientationchange', checkOrientation);

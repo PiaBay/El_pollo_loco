@@ -15,10 +15,11 @@ class AudioManager {
             chicken: this.load('./audio/chicken-noise-228106.mp3'),
             bossHit: this.load('./audio/roaster-crows-2-363352.mp3'),
             bossIntro: this.load('./audio/dark-drone-351092.mp3'),
-            bossAttack: this.load('./audio/chicken-noise-228106.mp3'),
-            menuMusic: this.load('./audio/spanish-guitar-208363.mp3', true),  // für Startseite
-            gameMusic: this.load('./audio/spanish-motifs-329486.mp3', true)
-};
+            bossAttack: this.load('./audio/chicken-talk-30453.mp3'),
+            menuMusic: this.load('./audio/spanish-guitar-208363.mp3', true),
+            gameMusic: this.load('./audio/spanish-motifs-329486.mp3', true),
+            longIdle: this.load('./audio/male-snore-1-29322.mp3')
+};          
 
         this.soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
         this.musicEnabled = localStorage.getItem('musicEnabled') === 'true';

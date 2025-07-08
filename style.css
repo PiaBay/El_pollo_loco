@@ -175,21 +175,18 @@ button:hover {
 .end-screen img {
     max-width: 50%;
     height: auto;
-    margin-bottom: 30px;
 }
 
 .end-text {
     color: white;
-    font-size: 48px;
+    font-size: 32px;
     font-family: sans-serif;
-    margin-bottom: 20px;
 }
 
-/* Steuerungsbuttons - Standard verstecken */
 .game-controls {
     position: fixed;
     top: 20px;
-    left: 50%;
+    right: 5px;
     transform: translateX(-50%);
     display: flex;
     gap: 15px;
@@ -259,7 +256,6 @@ button:hover {
     .game-controls {
         position: absolute;
         /* statt fixed */
-        top: 10px;
         transform: none;
         opacity: 1 !important;
         pointer-events: auto !important;
@@ -273,7 +269,6 @@ button:hover {
     canvas{
         width: 90vw;
         height: auto;
-        max-height: 480px;
     }
 
     .symbols {
@@ -281,15 +276,20 @@ button:hover {
         height: 80px;
     }
 
-    .start-buttons {
-        flex-direction: column;
-        gap: 10px;
-    }
+
           .mobile-controls {
               display: flex !important;
           }
 }
+@media (max-width: 600px) {
+    .end-screen img {
+        max-height: 150px;
+    }
 
+    .reload-btn {
+        margin-top: 10px;
+    }
+}
 @media (max-width: 480px) {
     .game-controls button {
         width: 50px;
@@ -319,4 +319,9 @@ button:hover {
     .orientation-overlay {
         display: none !important;
     }
+}
+#end-image {
+    max-height: 200px;
+    margin-bottom: 20px;
+    object-fit: contain;
 }

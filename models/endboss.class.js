@@ -92,7 +92,8 @@ class Endboss extends MovableObject {
     /** Starts the boss intro animation. */
     startIntroAnimation() {
         if (this.introPlayed || this.isIntroRunning) return;
-        this.world.inputHandler?.resetKeys?.(); 
+        this.world.inputHandler?.resetKeys?.();
+ 
 
         this.isIntroRunning = true;
         this.introPlayed = true;
