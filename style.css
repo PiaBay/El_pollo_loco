@@ -12,7 +12,7 @@ body {
     height: 100vh;
     flex-direction: column;
     width: 100%;
-    background-image: url('../assets/desert-4258740_1280.jpg');
+    background-image: url('./assets/desert-4258740_1280.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -196,6 +196,11 @@ button:hover {
     transition: opacity 0.3s ease;
 }
 
+.game-controls.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
 .game-controls button {
     padding: 8px 12px;
     font-size: 16px;
@@ -253,14 +258,7 @@ button:hover {
         font-size: 48px;
         padding: 30px;
     }
-    .game-controls {
-        position: absolute;
-        /* statt fixed */
-        transform: none;
-        opacity: 1 !important;
-        pointer-events: auto !important;
-        z-index: 20;
-    }
+
 
     .canvas-wrapper {
         position: relative;

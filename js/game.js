@@ -82,7 +82,8 @@ function initMobileControls() {
  */
 function startGame() {
   canvas = document.querySelector('#gameCanvas');
-  document.querySelector('.game-controls')?.classList.remove('hidden');
+  document.querySelector('.game-controls')?.classList.add('visible');
+
   const ctx = adjustCanvasForHDPI(canvas);
   const character = new Character();
   character.loadImages(character.IMAGES_WALKING, () => {
@@ -93,6 +94,7 @@ function startGame() {
     window.audio.play('gameMusic');
   });
 }
+
 
 /**
  * Reloads the entire page to restart the game.

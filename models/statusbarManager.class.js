@@ -52,10 +52,9 @@ class StatusBarManager {
  * @param {string} name - Label used for console logging.
  * @returns {HTMLImageElement} Loaded image element.
  */
-    createIcon(src, name) {
+    createIcon(src) {
         const img = new Image();
         img.src = src;
-        img.onload = () => console.log(`✅ ${name} loaded`);
         return img;
     }
 
