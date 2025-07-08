@@ -3,57 +3,14 @@
  * Provides image handling, caching, and positional properties.
  */
 class MovableObject {
-    /**
-     * The horizontal position of the object on the canvas.
-     * @type {number}
-     */
     x = 0;
-
-    /**
-     * The vertical position of the object on the canvas.
-     * @type {number}
-     */
     y = 0;
-
-    /**
-     * The width of the object.
-     * @type {number}
-     */
     width = 100;
-
-    /**
-     * The height of the object.
-     * @type {number}
-     */
     height = 100;
-
-    /**
-     * The currently displayed image of the object.
-     * @type {HTMLImageElement | undefined}
-     */
     img;
-
-    /**
-     * A cache for preloaded images, mapped by their file paths.
-     * @type {Object<string, HTMLImageElement>}
-     */
     imageCache = {};
-
-    /**
-     * Index for tracking the current image in animations.
-     * @type {number}
-     */
     currentImage = 0;
-
-
-    /** @type {number} */
     speed = 5;
-
-
-    /**
- * Reference to animation interval.
- * @type {number | null}
- */
     animationInterval = null;
 
 /**
@@ -87,7 +44,6 @@ class MovableObject {
         });
     }
 
-
 /**
  * Sets the current image by index from the image cache.
  * @param {number} i - Index of the image in the animation sequence.
@@ -98,17 +54,16 @@ setImageByIndex(i) {
 }
 
 
-    /**
-     * Sets the current image from the image cache if it's fully loaded.
-     * @param {string} path - File path of the image.
-     */
+/**
+ * Sets the current image from the image cache if it's fully loaded.
+ * @param {string} path - File path of the image.
+ */
     setImage(path) {
         const cached = this.imageCache[path];
         if (!cached) {
             console.warn("❌ Bild nicht im Cache:", path);
             return;
         }
-
         if (cached.complete && cached.naturalWidth > 0) {
             this.img = cached;
         } else {
@@ -117,8 +72,6 @@ setImageByIndex(i) {
             };
         }
     }
-
-
 
 /**
 * Starts the walking animation if not already active.
@@ -129,19 +82,15 @@ setImageByIndex(i) {
         this.animationInterval = setInterval(() => {
             const i = this.currentImage % imageList.length;
             const imgPath = imageList[i];
-
             const cachedImg = this.imageCache[imgPath];
             if (cachedImg && cachedImg.complete && cachedImg.naturalWidth > 0) {
                 this.img = cachedImg;
             } else {
                 console.warn('⚠️ Bild nicht geladen:', imgPath);
             }
-
             this.currentImage++;
         }, interval);
     }
-
-
 
 /**
  * Moves the object to the left based on its speed.
@@ -155,7 +104,6 @@ setImageByIndex(i) {
         }
     }
 
-
 /**
  * Checks if this object is colliding with another.
  * @param {MovableObject} other - Another game object.
@@ -163,38 +111,85 @@ setImageByIndex(i) {
  */
     isColliding(other) {
         const offset = 10;
-
         return this.x + this.width - offset > other.x + offset &&
             this.x + offset < other.x + other.width - offset &&
             this.y + this.height - offset > other.y + offset &&
             this.y + offset < other.y + other.height - offset;
     }
+    
+/**
+ * Applies gravity logic to the object.
+ * Handles both death fall and regular movement physics.
+ */
     applyGravity() {
         if (this.fallAfterDeath) {
-            this.y += this.velocityY;
-            this.velocityY += this.gravity;
-            this.x += this.vxAfterDeath || 0;
-            return;
+            this.applyDeathFall();
+        } else {
+            this.applyStandardGravity();
         }
+    }
 
+/**
+ * Applies gravity and horizontal movement during the death fall.
+ * The object continues falling and drifting sideways if configured.
+ */
+    applyDeathFall() {
+        this.y += this.velocityY;
+        this.velocityY += this.gravity;
+        this.x += this.vxAfterDeath || 0;
+    }
+
+/**
+    * Applies standard gravity when character is alive and jumping/falling.
+    * Handles landing and falling state transitions.
+    */
+    applyStandardGravity() {
         this.velocityY += this.gravity;
         this.y += this.velocityY;
-
-        if (this.y >= this.groundY) {
-            this.y = this.groundY;
-            this.velocityY = 0;
-
-            if (this.isInAir) {
-                this.isInAir = false;
-                this.jumpAnimationRunning = false;
-                clearInterval(this.animationInterval);
-                this.animationInterval = null;
-                if (!this.isDead) this.setImage(this.IMAGES_IDLE[0]);
-            }
+        if (this.isOnGround()) {
+            this.landOnGround();
         } else {
-            if (!this.isInAir) {
-                this.isInAir = true;
-                if (!this.isDead) this.setImage(this.IMAGE_FALLING);
+            this.handleFallingState();
+        }
+    }
+
+/**
+    * Checks whether the object has reached or passed the ground level.
+    * 
+    * @returns {boolean} True if object is touching or below ground.
+    */
+    isOnGround() {
+        return this.y >= this.groundY;
+    }
+
+/**
+    * Handles the landing logic after falling or jumping.
+    * Resets velocity, updates flags, and shows idle image.
+    */
+    landOnGround() {
+        this.y = this.groundY;
+        this.velocityY = 0;
+        if (this.isInAir) {
+            this.isInAir = false;
+            this.jumpAnimationRunning = false;
+            clearInterval(this.animationInterval);
+            this.animationInterval = null;
+
+            if (!this.isDead) {
+                this.setImage(this.IMAGES_IDLE[0]);
+            }
+        }
+    }
+
+/**
+    * Handles state and animation when the object is in the air and falling.
+    * Triggers falling image if not already in air or dead.
+    */
+    handleFallingState() {
+        if (!this.isInAir) {
+            this.isInAir = true;
+            if (!this.isDead) {
+                this.setImage(this.IMAGE_FALLING);
             }
         }
     }

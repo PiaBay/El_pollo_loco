@@ -76,6 +76,10 @@ function initMobileControls() {
   }
 }
 
+/**
+ * Starts the game by initializing the canvas, character, and world.
+ * Also begins playing game music if enabled.
+ */
 function startGame() {
   canvas = document.querySelector('#gameCanvas');
   document.querySelector('.game-controls')?.classList.remove('hidden');
@@ -90,18 +94,25 @@ function startGame() {
   });
 }
 
+/**
+ * Reloads the entire page to restart the game.
+ */
 function restartGame() {
   location.reload();
 }
 
-
+/**
+ * Exits the game after user confirmation and redirects to the start page.
+ */
 function exitGame() {
-  if (confirm("Spiel beenden und zur Startseite zurückkehren?")) {
+  if (confirm("Exit game and return to start page?")) {
     window.location.href = './index.html';
   }
 }
 
-
+/**
+ * Plays the menu music once on first user interaction, if music is enabled.
+ */
 function startMusicOnce() {
   if (!musicStarted && localStorage.getItem('musicEnabled') !== 'false') {
     if (window.audio) {
@@ -111,7 +122,10 @@ function startMusicOnce() {
   }
 }
 
-
+/**
+ * Initializes the overlay buttons (Help, Settings, Audio).
+ * Adds click event listeners that open the corresponding overlay.
+ */
 function initOverlayButtons() {
   const helpBtn = document.querySelector('.help-btn');
   const settingsBtn = document.querySelector('.settings-btn');
@@ -127,7 +141,11 @@ function initOverlayButtons() {
   }
 }
 
-
+/**
+ * Opens the overlay with the provided URL and pauses the game.
+ * 
+ * @param {string} url - The URL of the overlay content to load.
+ */
 function openOverlay(url) {
   pauseGame();
   const overlay = document.querySelector('.overlay');
@@ -136,7 +154,9 @@ function openOverlay(url) {
   overlay.classList.remove('hidden');
 }
 
-
+/**
+ * Closes the overlay and resumes the game.
+ */
 function closeOverlay() {
   const overlay = document.querySelector('.overlay');
   const frame = document.querySelector('.overlay-frame');
@@ -146,7 +166,10 @@ function closeOverlay() {
   resumeGame();
 }
 
-
+/**
+ * Initializes the start button and defines what happens when it's clicked.
+ * Hides the start screen, shows the game canvas, stops menu music, and starts the game.
+ */
 function initStartButton() {
   const startButton = document.querySelector('.start-btn');
   const startScreen = document.querySelector('.start-end-screen');
@@ -163,7 +186,10 @@ function initStartButton() {
   }
 }
 
-
+/**
+ * Initializes the restart button.
+ * When clicked, redirects to the main index page.
+ */
 function initRestartButton() {
   const restartButton = document.querySelector('.restart-btn');
   if (restartButton) {
@@ -173,7 +199,9 @@ function initRestartButton() {
   }
 }
 
-
+/**
+ * Pauses the game by stopping the game loop and disabling player movement.
+ */
 function pauseGame() {
   if (isPaused) return;
   isPaused = true;
@@ -186,6 +214,9 @@ function pauseGame() {
   keyboard.SPACE = false;
 }
 
+/**
+ * Resumes the game by restarting the game loop if it was previously paused.
+ */
 function resumeGame() {
   if (!isPaused) return;
   isPaused = false;
@@ -194,7 +225,10 @@ function resumeGame() {
   }
 }
 
-
+/**
+ * Applies the current audio settings based on whether the start screen is visible.
+ * Syncs world sound/music settings with AudioManager.
+ */
 function applyAudioSettings() {
   const isStartScreenVisible = !document.querySelector('.start-end-screen')?.classList.contains('hidden');
   if (window.audio) {
@@ -206,7 +240,14 @@ function applyAudioSettings() {
   }
 }
 
+// Expose applyAudioSettings globally
 window.applyAudioSettings = applyAudioSettings;
+
+/**
+ * Initializes game logic on DOM load.
+ * Loads audio manager, sets music to play once on interaction,
+ * sets up controls and orientation checks.
+ */
 window.addEventListener('DOMContentLoaded', () => {
   window.audio = new AudioManager();
   document.addEventListener('click', startMusicOnce, { once: true });

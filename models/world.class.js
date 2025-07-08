@@ -2,18 +2,18 @@
  * Represents the game world, including rendering, game logic, audio, and object handling.
  */
 class World {
-    /** @type {HTMLCanvasElement} */ canvas;
-    /** @type {CanvasRenderingContext2D} */ ctx;
-    /** @type {Character} */ character;
-    /** @type {number} */ camera_x = 0;
+canvas;
+ctx;
+character;
+camera_x = 0;
 
-    /**
-     * Initializes a new World instance.
-     * @param {HTMLCanvasElement} canvas - The canvas element.
-     * @param {CanvasRenderingContext2D} ctx - The 2D rendering context.
-     * @param {Character} character - The main playable character.
-     * @param {AudioManager} [audio] - The audio manager (optional).
-     */
+/**
+ * Initializes a new World instance.
+ * @param {HTMLCanvasElement} canvas - The canvas element.
+ * @param {CanvasRenderingContext2D} ctx - The 2D rendering context.
+ * @param {Character} character - The main playable character.
+ * @param {AudioManager} [audio] - The audio manager (optional).
+ */
     constructor(canvas, ctx, character, audio = null) {
         this.canvas = canvas;
         this.ctx = ctx;
@@ -34,9 +34,9 @@ class World {
         this.draw();
     }
 
-    /**
-     * Starts the game loop and continuously renders the game.
-     */
+/**
+ * Starts the game loop and continuously renders the game.
+ */
     draw() {
         if (!window.frameCount) {
             window.frameCount = 0;
@@ -59,9 +59,9 @@ class World {
         this.animationFrameId = requestAnimationFrame(() => this.draw());
     }
 
-    /**
-     * Renders and updates all world elements.
-     */
+/**
+ * Renders and updates all world elements.
+ */
     drawWorldElements() {
         this.drawBackground();
         this.updateWorldState();
@@ -70,17 +70,17 @@ class World {
 
     }
 
-    /**
-     * Draws all background elements.
-     */
+/**
+ * Draws all background elements.
+ */
     drawBackground() {
         this.addObjectsToMap(this.gameManager.backgroundObjects);
         this.addObjectsToMap(this.gameManager.clouds);
     }
 
-    /**
-     * Updates all dynamic world entities.
-     */
+/**
+ * Updates all dynamic world entities.
+ */
     updateWorldState() {
         this.endbossController.checkActivation();
         this.updateEnemies();
@@ -95,9 +95,9 @@ class World {
         }
     }
 
-    /**
-     * Renders all visible game objects.
-     */
+/**
+ * Renders all visible game objects.
+ */
     drawWorldObjects() {
         this.addToMap(this.character);
         this.addObjectsToMap(this.gameManager.coins);
@@ -118,16 +118,16 @@ class World {
         }
     }
 
-    /**
-     * Draws all status bars (health, bottles, coins, boss).
-     */
+/**
+ * Draws all status bars (health, bottles, coins, boss).
+ */
     drawStatusBars() {
         this.statusBarManager.drawAll(this.ctx);
     }
 
-    /**
-     * Handles coin collection and status update.
-     */
+/**
+ * Handles coin collection and status update.
+ */
     updateCoins() {
         this.gameManager.coins = this.gameManager.coins.filter((coin) => {
             if (coin.isCollectedBy(this.character)) {
@@ -143,9 +143,9 @@ class World {
         });
     }
 
-    /**
-     * Handles chicken movement, collision, and jump-kill or damage.
-     */
+/**
+ * Handles chicken movement, collision, and jump-kill or damage.
+ */
     updateEnemies() {
         this.gameManager.chickens = this.gameManager.chickens.filter(chicken => {
             chicken.moveLeft();
@@ -163,9 +163,9 @@ class World {
         });
     }
 
-    /**
-     * Handles bottle collection and status update.
-     */
+/**
+ * Handles bottle collection and status update.
+ */
     updateBottles() {
         this.gameManager.bottles = this.gameManager.bottles.filter((bottle) => {
             if (bottle.isCollectedBy(this.character)) {
@@ -182,9 +182,9 @@ class World {
         });
     }
 
-    /**
-     * Handles thrown bottle movement and collision with the endboss.
-     */
+/**
+ * Handles thrown bottle movement and collision with the endboss.
+ */
     updateThrowables() {
         this.gameManager.throwables = this.gameManager.throwables.filter((bottle) => {
             bottle.move();
@@ -201,24 +201,22 @@ class World {
         });
     }
 
-    /**
-     * Draws a list of objects onto the canvas.
-     * @param {MovableObject[]} objects - List of drawable objects.
-     */
+/**
+ * Draws a list of objects onto the canvas.
+ * @param {MovableObject[]} objects - List of drawable objects.
+ */
     addObjectsToMap(objects) {
         objects.forEach(o => this.addToMap(o));
     }
 
-    /**
-     * Draws a single object, flipped if facing left.
-     * @param {MovableObject} mo - Movable object to render.
-     **/
+/**
+ * Draws a single object, flipped if facing left.
+ * @param {MovableObject} mo - Movable object to render.
+ **/
     addToMap(mo) {
         if (!mo.img) return;
         const isFlipped = mo.otherDirection;
-
         if (mo instanceof Endboss && mo.isDead && mo.fallAfterDeath) {
-            // Optional: Spezialfall für Todesrotation
             this.ctx.save();
             const cx = mo.x + mo.width / 2;
             const cy = mo.y + mo.height / 2;
@@ -227,7 +225,6 @@ class World {
             this.ctx.drawImage(mo.img, -mo.width / 2, -mo.height / 2, mo.width, mo.height);
             this.ctx.restore();
         } else if (isFlipped) {
-            // 👉 gespiegelt zeichnen (z. B. nach rechts schauen)
             this.ctx.save();
             this.ctx.scale(-1, 1);
             this.ctx.drawImage(mo.img, -mo.x - mo.width, mo.y, mo.width, mo.height);
@@ -236,7 +233,5 @@ class World {
             this.ctx.drawImage(mo.img, mo.x, mo.y, mo.width, mo.height);
         }
     }
-
 }
-
 window.World = World;

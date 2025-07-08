@@ -19,18 +19,18 @@ class AudioManager {
             menuMusic: this.load('./audio/spanish-guitar-208363.mp3', true),
             gameMusic: this.load('./audio/spanish-motifs-329486.mp3', true),
             longIdle: this.load('./audio/male-snore-1-29322.mp3')
-};          
+        };
 
         this.soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
         this.musicEnabled = localStorage.getItem('musicEnabled') === 'true';
     }
 
-    /**
-     * Loads an audio file.
-     * @param {string} path - Path to the audio file.
-     * @param {boolean} [loop=false] - Whether the audio should loop.
-     * @returns {HTMLAudioElement} The loaded audio element.
-     */
+/**
+* Loads an audio file.
+* @param {string} path - Path to the audio file.
+* @param {boolean} [loop=false] - Whether the audio should loop.
+* @returns {HTMLAudioElement} The loaded audio element.
+*/
     load(path, loop = false) {
         const audio = new Audio(path);
         audio.loop = loop;
@@ -38,15 +38,15 @@ class AudioManager {
         return audio;
     }
 
-    /**
-     * Plays a sound by name.
-     * @param {string} name - The name of the sound.
-     */
+/**
+ * Plays a sound by name.
+ * @param {string} name - The name of the sound.
+ */
     play(name) {
         const sound = this.sounds[name];
         if (!sound) return;
 
-        const isMusic = sound.loop; // Musik wird geloopt
+        const isMusic = sound.loop;
         const isAllowed = isMusic ? this.musicEnabled : this.soundEnabled;
 
         if (isAllowed) {
@@ -56,10 +56,10 @@ class AudioManager {
     }
 
 
-    /**
-     * Stops a sound by name.
-     * @param {string} name - The name of the sound.
-     */
+/**
+ * Stops a sound by name.
+ * @param {string} name - The name of the sound.
+ */
     stop(name) {
         const sound = this.sounds[name];
         if (sound) {
@@ -68,32 +68,43 @@ class AudioManager {
         }
     }
 
-    /** Stops all sounds. */
+/** Stops all sounds. */
     stopAll() {
         for (const name in this.sounds) {
             this.stop(name);
         }
     }
 
-    /** Plays the background music if enabled and stop. */
+/** Plays the background music if enabled and stop. */
     playMusic(name = 'gameMusic') {
         if (this.musicEnabled) {
             this.sounds[name]?.play().catch(() => { });
         }
     }
 
+/**
+ * Pauses the specified music track if it is currently playing.
+ * 
+ * @param {string} [name='gameMusic'] - The name of the music track to pause.
+ */
     pauseMusic(name = 'gameMusic') {
         this.sounds[name]?.pause();
     }
 
-
-
-    /** Reloads settings from localStorage. */
+/** Reloads settings from localStorage. */
     refreshSettings() {
         this.soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
         this.musicEnabled = localStorage.getItem('musicEnabled') === 'true';
     }
 
+/**
+ * Applies audio settings based on the current application state (start screen or in-game).
+ * - Reads user preferences from localStorage.
+ * - Enables/disables music and sound accordingly.
+ * - Starts or stops the appropriate background music.
+ * 
+ * @param {boolean} isStartScreenVisible - Indicates whether the start screen is currently visible.
+ */
     applySettingsBasedOnState(isStartScreenVisible) {
         this.musicEnabled = localStorage.getItem('musicEnabled') === 'true';
         this.soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
@@ -114,9 +125,4 @@ class AudioManager {
             }
         }
     }
-
-
-
 }
-
-

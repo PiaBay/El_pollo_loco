@@ -1,48 +1,112 @@
+/**
+ * Manages all status bars and HUD elements.
+ * Handles updates and rendering of health, coins, bottles, and boss health.
+ */
 class StatusBarManager {
+/**
+ * @param {Character} character - The player character.
+ * @param {GameManager} gameManager - The game manager instance.
+ */
     constructor(character, gameManager) {
         this.character = character;
         this.gameManager = gameManager;
+        this.showBossHealthBar = false;
+        this.lastDrawn = {};
 
+        this.initStatusBars();
+        this.loadIcons();
+    }
+
+/** Initializes the individual status bars. */
+    initStatusBars() {
         this.statusBar = new StatusBar(100);
         this.coinStatusBar = new CoinStatusBar();
         this.bottleStatusBar = new BottleStatusBar();
         this.bossHealthBar = new EndbossStatusBar();
-        this.showBossHealthBar = false;
-
-        this.heartIcon = new Image();
-        this.heartIcon.src = './assets/img_pollo_locco/img/7_statusbars/3_icons/icon_health.png';
-        this.heartIcon.onload = () => console.log('✅ heartIcon geladen');
-
-        this.coinIcon = new Image();
-        this.coinIcon.src = './assets/img_pollo_locco/img/7_statusbars/3_icons/icon_coin.png';
-        this.coinIcon.onload = () => console.log('✅ coinIcon geladen');
-
-        this.bottleIcon = new Image();
-        this.bottleIcon.src = './assets/img_pollo_locco/img/7_statusbars/3_icons/icon_salsa_bottle.png';
-        this.bottleIcon.onload = () => console.log('✅ bottleIcon geladen');
-
-        this.bossIcon = new Image();
-        this.bossIcon.src = './assets/img_pollo_locco/img/7_statusbars/3_icons/icon_health_endboss.png';
-        this.bossIcon.onload = () => console.log('✅ bossIcon geladen');
     }
 
+/** Loads all status bar icons and sets up onload logging. */
+    loadIcons() {
+        this.heartIcon = this.createIcon(
+            './assets/img_pollo_locco/img/7_statusbars/3_icons/icon_health.png',
+            'heartIcon'
+        );
+        this.coinIcon = this.createIcon(
+            './assets/img_pollo_locco/img/7_statusbars/3_icons/icon_coin.png',
+            'coinIcon'
+        );
+        this.bottleIcon = this.createIcon(
+            './assets/img_pollo_locco/img/7_statusbars/3_icons/icon_salsa_bottle.png',
+            'bottleIcon'
+        );
+        this.bossIcon = this.createIcon(
+            './assets/img_pollo_locco/img/7_statusbars/3_icons/icon_health_endboss.png',
+            'bossIcon'
+        );
+    }
 
+/**
+ * Creates an image object for a status icon.
+ *
+ * @param {string} src - Image path.
+ * @param {string} name - Label used for console logging.
+ * @returns {HTMLImageElement} Loaded image element.
+ */
+    createIcon(src, name) {
+        const img = new Image();
+        img.src = src;
+        img.onload = () => console.log(`✅ ${name} loaded`);
+        return img;
+    }
+
+/**
+ * Updates the coin status bar based on collected coins.
+ *
+ * @param {number} collected - Number of collected coins.
+ * @param {number} total - Total number of coins in the level.
+ */
     updateCoins(collected, total) {
         this.coinStatusBar.setCoins(collected, total);
     }
 
+/**
+ * Updates the bottle status bar.
+ *
+ * @param {number} currentBottles - Number of available bottles.
+ * @param {number} maxCapacity - Maximum bottle capacity.
+ */
     updateBottles(currentBottles, maxCapacity) {
         this.bottleStatusBar.setBottles(currentBottles, maxCapacity);
     }
 
+/** Updates the health bar of the player character. */
     updateCharacterHealth() {
         this.statusBar.setEnergy(this.character.energy);
     }
 
+/**
+ * Updates the Endboss health bar.
+ *
+ * @param {number} currentEnergy - Current boss energy.
+ */
     updateBossHealth(currentEnergy) {
         this.bossHealthBar.setPercentage(currentEnergy);
-        this.bossHealthBar.energy = currentEnergy; // 🔧 manuell setzen!
+        this.bossHealthBar.energy = currentEnergy; // Manual sync for compact mode
     }
+
+/**
+ * Draws compact status bar icons for small screen layouts.
+ *
+ * @param {CanvasRenderingContext2D} ctx - The canvas context.
+ * @param {HTMLImageElement} icon - Icon image to draw.
+ * @param {number} value - Numerical value to display.
+ * @param {number} x - X position.
+ * @param {number} y - Y position.
+ * @param {number} iconSize - Icon width and height.
+ * @param {string} lastValueKey - Key to track redraw state.
+ * @param {number} scale - Canvas scale factor.
+ * @param {number} fontSize - Text font size.
+ */
     drawCompactIcon(ctx, icon, value, x, y, iconSize, lastValueKey, scale = 1, fontSize = 18) {
         if (!this.lastDrawn) this.lastDrawn = {};
 
@@ -54,35 +118,56 @@ class StatusBarManager {
         ctx.font = `bold ${fontSize}px Arial`;
         ctx.fillText(`${value}`, x + iconSize + 4, y + iconSize / 1.5);
 
-        // 👇 Immer erst nach dem Zeichnen speichern!
         this.lastDrawn[lastValueKey] = value;
     }
 
-
+/**
+ * Draws all active status elements based on screen size.
+ * 
+ * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
+ */
     drawAll(ctx) {
         const isCompact = window.innerWidth <= 700;
-
-        if (!isCompact) {
-            this.statusBar.draw(ctx);
-            this.coinStatusBar.draw(ctx);
-            this.bottleStatusBar.draw(ctx);
-            if (this.showBossHealthBar) {
-                this.bossHealthBar.draw(ctx);
-            }
+        if (isCompact) {
+            this.drawCompactHUD(ctx);
         } else {
-            const iconSize = 70;
-            const spacingX = 130;
-            const baseX = 20;
-            const baseY = 25;
-            const scale = ctx.canvas.width / parseInt(ctx.canvas.style.width);
-            const fontSize = 18 * scale;
+            this.drawFullHUD(ctx);
+        }
+    }
 
-            this.drawCompactIcon(ctx, this.heartIcon, this.character.energy, baseX, baseY, iconSize, 'energy', scale, fontSize);
-            this.drawCompactIcon(ctx, this.coinIcon, this.gameManager.collectedCoins, baseX + spacingX, baseY, iconSize, 'coins', scale, fontSize);
-            this.drawCompactIcon(ctx, this.bottleIcon, this.gameManager.availableBottles, baseX + spacingX * 2, baseY, iconSize, 'bottles', scale, fontSize);
-            if (this.showBossHealthBar && this.bossHealthBar.energy !== undefined) {
-                this.drawCompactIcon(ctx, this.bossIcon, this.bossHealthBar.energy, baseX + spacingX * 3, baseY, iconSize, 'boss', scale, fontSize);
-            }
+/**
+ * Draws the full HUD with horizontal status bars (for wide screens).
+ * 
+ * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
+ */
+    drawFullHUD(ctx) {
+        this.statusBar.draw(ctx);
+        this.coinStatusBar.draw(ctx);
+        this.bottleStatusBar.draw(ctx);
+
+        if (this.showBossHealthBar) {
+            this.bossHealthBar.draw(ctx);
+        }
+    }
+
+/**
+ * Draws a compact version of the HUD using icons and numbers (for small screens).
+ * 
+ * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
+ */
+    drawCompactHUD(ctx) {
+        const iconSize = 70;
+        const spacingX = 130;
+        const baseX = 20;
+        const baseY = 25;
+        const scale = ctx.canvas.width / parseInt(ctx.canvas.style.width);
+        const fontSize = 18 * scale;
+
+        this.drawCompactIcon(ctx, this.heartIcon, this.character.energy, baseX, baseY, iconSize, 'energy', scale, fontSize);
+        this.drawCompactIcon(ctx, this.coinIcon, this.gameManager.collectedCoins, baseX + spacingX, baseY, iconSize, 'coins', scale, fontSize);
+        this.drawCompactIcon(ctx, this.bottleIcon, this.gameManager.availableBottles, baseX + spacingX * 2, baseY, iconSize, 'bottles', scale, fontSize);
+        if (this.showBossHealthBar && this.bossHealthBar.energy !== undefined) {
+            this.drawCompactIcon(ctx, this.bossIcon, this.bossHealthBar.energy, baseX + spacingX * 3, baseY, iconSize, 'boss', scale, fontSize);
         }
     }
 }

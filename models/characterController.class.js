@@ -14,9 +14,9 @@ class CharacterController {
         this.inputHandler = inputHandler;
     }
 
-    /**
-     * Updates character movement, idle animation, and camera tracking.
-     */
+/**
+ * Updates character movement, idle animation, and camera tracking.
+ */
     update() {
         if (!this.world.gameManager.characterCanMove) return;
         if (this.character.isDead || this.character.isStunned || this.character.isHurt) return;
@@ -26,16 +26,16 @@ class CharacterController {
         this.updateCameraPosition();
     }
 
-    /**
+/**
  * Triggers idle animation if applicable.
  */
     handleIdleAnimation() {
         this.character.checkLongIdleAnimation(this.world.gameManager.preventIdle);
     }
 
-    /**
-     * Handles keyboard input for movement.
-     */
+/**
+ * Handles keyboard input for movement.
+ */
     handleMovementInput() {
         if (this.inputHandler.isPressed('RIGHT')) {
             this.character.moveRight();
@@ -46,9 +46,9 @@ class CharacterController {
         }
     }
 
-    /**
-     * Updates camera position based on character or boss focus.
-     */
+/**
+ * Updates camera position based on character or boss focus.
+ */
     updateCameraPosition() {
         const boss = this.world.endbossController?.endboss;
         const bossFocus = this.world.endbossController?.bossFocusActive;
@@ -61,20 +61,17 @@ class CharacterController {
         }
     }
 
-
-
-
-    /**
-     * Handles logic when the character takes damage from an enemy.
-     */
+/**
+ * Handles logic when the character takes damage from an enemy.
+ */
     handleHit() {
         this.character.takeDamage(20);
         this.world.statusBarManager.updateCharacterHealth();
     }
 
-    /**
-     * Handles jump-on-chicken logic.
-     */
+/**
+ * Handles jump-on-chicken logic.
+ */
     handleJumpKill(chicken) {
         const hitFromAbove = this.character.y + this.character.height < chicken.y + 30;
         if (hitFromAbove) {
@@ -89,6 +86,4 @@ class CharacterController {
         this.world.audio.play('chicken');
     }
 }
-
-// Export for use in World class
 window.CharacterController = CharacterController;

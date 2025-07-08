@@ -55,10 +55,11 @@ class Endboss extends MovableObject {
         './assets/img_pollo_locco/img/4_enemie_boss_chicken/5_dead/G26.png'
     ];
 
-    /**
-     * Constructs the Endboss instance and preloads images.
-     * @param {number} x - Starting X coordinate
-     */
+/**
+ * Constructs the Endboss instance and preloads all animations.
+ * 
+ * @param {number} x - Starting X position of the endboss.
+ */
     constructor(x) {
         super();
         this.x = 2600;
@@ -67,11 +68,9 @@ class Endboss extends MovableObject {
         this.height = 300;
         this.speed = 10;
         this.introPositionX = 2600;
-
         this.velocityY = 0;
         this.gravity = 0.8;
         this.groundY = 180;
-
         this.loadImages(this.IMAGES_WALKING, () => this.setImage(this.IMAGES_WALKING[0]));
         this.loadImages(this.IMAGES_ALERT);
         this.loadImages(this.IMAGES_ATTACK);
@@ -79,22 +78,22 @@ class Endboss extends MovableObject {
         this.loadImages(this.IMAGES_DIE);
     }
 
-
-    /**
-     * Determines if the boss can currently take damage.
-     * @returns {boolean}
-     */
+/**
+ * Determines if the endboss can currently take damage.
+ * 
+ * @returns {boolean} True if damage cooldown has passed.
+ */
     canTakeDamage() {
         return Date.now() - this.lastHitTime > this.hurtCooldown;
     }
 
-
-    /** Starts the boss intro animation. */
+/**
+ * Starts the intro animation sequence.
+ * Disables movement, resets input, and switches to alert phase.
+ */
     startIntroAnimation() {
         if (this.introPlayed || this.isIntroRunning) return;
         this.world.inputHandler?.resetKeys?.();
- 
-
         this.isIntroRunning = true;
         this.introPlayed = true;
         this.phase = 'intro';
@@ -103,8 +102,10 @@ class Endboss extends MovableObject {
         this.loadImages(this.IMAGES_ALERT, () => this.playAlertAnimation());
     }
 
-
-    /** Plays alert animation frames. */
+/**
+ * Plays alert animation frames in sequence.
+ * Transitions to attack phase after completion.
+ */
     playAlertAnimation() {
         let frame = 0;
         this.alertInterval = setInterval(() => {
@@ -114,8 +115,10 @@ class Endboss extends MovableObject {
         }, 500);
     }
 
-
-    /** Finalizes intro and starts movement and attack. */
+/**
+ * Ends the intro animation and switches the boss to attack phase.
+ * Resumes movement and calls `onIntroEnd()` if defined.
+ */
     endIntroAnimation() {
         clearInterval(this.alertInterval);
         this.alertInterval = null;
@@ -127,8 +130,10 @@ class Endboss extends MovableObject {
         this.speed = 8;
     }
 
-
-    /** Starts the walking animation. */
+/**
+ * Starts the walking animation in a loop.
+ * Each frame is shown for 350 ms.
+ */
     startWalkingAnimation() {
         if (this.animationInterval) return;
         this.walking = true;
@@ -140,8 +145,10 @@ class Endboss extends MovableObject {
         }, 350);
     }
 
-
-    /** Moves the boss left until reaching intro position. */
+/**
+ * Moves the boss to the left until the intro trigger position is reached.
+ * Starts the intro animation once at the target position.
+ */
     moveLeft() {
         if (this.isHurt) return;
         if (!this.walking) this.startWalkingAnimation();
@@ -153,8 +160,9 @@ class Endboss extends MovableObject {
         }
     }
 
-
-    /** Stops the walking animation. */
+/**
+ * Stops the walking animation and resets walking state.
+ */
     stopWalkingAnimation() {
         this.walking = false;
         clearInterval(this.animationInterval);
@@ -162,8 +170,10 @@ class Endboss extends MovableObject {
         this.currentImage = 0;
     }
 
-
-    /** Starts attacking sequence with animation and sound. */
+/**
+ * Starts the attack sequence by playing sound, resetting animation state,
+ * and loading attack images before starting the attack animation.
+ */
     startAttacking() {
         if (this.attackInterval) return;
         this.playAttackSound();
@@ -171,22 +181,26 @@ class Endboss extends MovableObject {
         this.loadImages(this.IMAGES_ATTACK, () => this.playAttackAnimation());
     }
 
-
-    /** Plays boss attack sound. */
+/**
+* Plays the boss attack sound using the world audio manager.
+*/
     playAttackSound() {
         this.world.audio.play('bossAttack');
     }
 
-
-    /** Resets the animation state and image. */
+/**
+* Resets the animation state by clearing intervals and resetting image index.
+*/
     resetAnimationState() {
         clearInterval(this.animationInterval);
         this.animationInterval = null;
         this.currentImage = 0;
     }
 
-
-    /** Plays attack animation frames. */
+/**
+* Plays the attack animation frames in sequence.
+* Returns to walking image after animation completes.
+*/
     playAttackAnimation() {
         const attackImages = this.IMAGES_ATTACK;
         let frame = 0;
@@ -204,8 +218,10 @@ class Endboss extends MovableObject {
         }, 300);
     }
 
-
-    /** Plays hurt animation when taking damage. */
+/**
+* Plays the hurt animation when the boss takes damage.
+* Skips if the boss is already dead.
+*/
     playHurtAnimation() {
         if (this.isDead) return;
         this.resetAnimationState();
@@ -220,8 +236,9 @@ class Endboss extends MovableObject {
         }, 300);
     }
 
-
-    /** Finalizes hurt animation state. */
+/**
+* Finalizes the hurt animation and resumes walking state.
+*/
     finishHurtAnimation() {
         clearInterval(this.animationInterval);
         this.animationInterval = null;
@@ -233,29 +250,26 @@ class Endboss extends MovableObject {
         this.startWalkingAnimation();
     }
 
-
-    /**
-     * Handles damage intake and calls death if energy depleted.
-     * @param {number} amount - Amount of damage
-     * @param {StatusBar} [statusBar] - Optional custom health bar
-     */
-    hit(amount = 30) {
+/**
+    * Handles damage intake and transitions the boss to the retreat phase.
+    * Triggers death animation if energy is depleted.
+    * 
+    * @param {number} amount - The amount of damage to apply.
+    * @param {StatusBar} [statusBar] - Optional custom status bar to update.
+    */
+    hit(amount = 30, statusBar) {
         if (this.isDead) return;
         this.energy = Math.max(0, this.energy - amount);
         this.statusBarManager?.updateBossHealth(this.energy);
         this.lastHitTime = Date.now();
         this.isHurt = true;
         this.isStunned = true;
-
         this.phase = 'retreat';
-
-        // 🔁 Optional: Nach kurzer Zeit zurück zur "attack"-Phase
         setTimeout(() => {
             if (!this.isDead && !this.isHurt) {
                 this.phase = 'attack';
             }
         }, 1200);
-
         if (this.energy <= 0) {
             this.die();
         } else {
@@ -263,58 +277,21 @@ class Endboss extends MovableObject {
         }
     }
 
-
-
-    /** Reduces energy and updates health bar. */
+/**
+    * Reduces the boss's energy without triggering animations.
+    * 
+    * @param {number} amount - The amount of energy to reduce.
+    */
     reduceEnergy(amount) {
         this.energy = Math.max(0, this.energy - amount);
         this.statusBarManager?.updateBossHealth(this.energy);
     }
 
-
-    /** Moves the boss toward the player and attacks if in range. */
-    pursueTarget(character) {
-        if (this.shouldSkipPursuit()) return;
-
-        switch (this.phase) {
-            case 'attack':
-                this.pursueAndAttack(character);
-                break;
-            case 'retreat':
-                this.moveBackToIntroPosition();
-                break;
-            case 'wait':
-                // nichts tun – auf neues Intro warten
-                break;
-        }
-    }
-
-
-/** Checks if boss should skip pursuing the player. */
-    shouldSkipPursuit() {
-        return this.isDead || this.isHurt || this.isStunned || this.energy <= 0;
-    }
-
-
 /**
- * Moves toward the character and checks for attack.
- * @param {Character} character - The player character
- */
-    pursueAndAttack(character) {
-        const dist = character.x - this.x;
-
-        if (Math.abs(dist) > 20) {
-            this.moveTowardsTarget(dist);
-            this.startWalkingAnimation();
-        } else {
-            this.stopWalkingAnimation();
-        }
-
-        this.checkAttack(character);
-    }
-
-
-/** Moves boss in direction of target. */
+* Moves the boss in the direction of the target.
+* 
+* @param {number} dist - Distance between boss and target (positive or negative).
+*/
     moveTowardsTarget(dist) {
         if (dist < 0) {
             this.x -= this.speed;
@@ -325,76 +302,24 @@ class Endboss extends MovableObject {
         }
     }
 
-
- /** Checks attack condition and applies damage if applicable. */
-    checkAttack(character) {
-        const distance = Math.abs(this.x - character.x);
-        const now = Date.now();
-        const attackRange = 80;
-        if (!this.lastAttackTime) this.lastAttackTime = 0;
-        if (this.canAttack(distance, now)) {
-            this.startAttacking();
-            character.takeDamage(20);
-            this.lastAttackTime = now;
-            this.world.statusBarManager.updateCharacterHealth();
-            this.phase = 'retreat';
-            this.world.bossFocusActive = true; // ✅ Kamera auf Boss
-            this.stopWalkingAnimation();
-        }
-    }
-    
-
-/** Returns true if attack is allowed. */
-    canAttack(distance, now) {
-        return distance < 80 && !this.isDead && !this.isHurt && !this.isStunned && now - this.lastAttackTime > 1000;
-    }
-
-
-    /**
-     * Moves the boss back until the edge of the visible camera area.
-     * Once reached, stops and faces the character.
-     */
-    moveBackToIntroPosition() {
-        const pepe = this.world.character;
-        const stopX = pepe.x + 720; // oder 680, je nach Abstand
-
-
-        if (this.x < stopX) {
-            this.x += this.speed;
-            this.otherDirection = true; // läuft weg von Pepe
-            this.startWalkingAnimation();
-        } else {
-            this.stopWalkingAnimation();
-            this.otherDirection = false; // dreht sich zu Pepe
-            this.phase = 'wait';
-            this.introPlayed = false;
-            this.startIntroAnimation();
-        }
-    }
-
-
-/** Handles death animation and fall. */
-    /** Handles death animation and triggers fall and end screen. */
+/**
+* Triggers the death animation, fall behavior, and ends the game.
+*/
     die() {
         if (this.isDead) return;
-
         this.isDead = true;
         this.stopCurrentAnimation();
         this.world.statusBarManager.updateBossHealth(0);
-        this.velocityY = 0; // Setze den Startwert für den Fall
+        this.velocityY = 0;
         this.gravity = 0.8;
-
-        // Animation und Fall durchlaufen, dann Endscreen anzeigen
         this.playDeathAnimation(() => {
             this.world.gameManager.handleGameEnd(true);
         });
     }
 
-
-
-
-
-/** Stops animation interval and resets state. */
+/**
+* Stops the current animation interval and resets animation state.
+*/
     stopCurrentAnimation() {
         clearInterval(this.animationInterval);
         this.animationInterval = null;
@@ -402,46 +327,41 @@ class Endboss extends MovableObject {
         this.currentImage = 0;
     }
 
-    /** Enables falling after death. */
+/**
+* Prepares the boss for falling after death.
+* Adjusts gravity, vertical and horizontal velocity.
+*/
     prepareDeathFall() {
-        this.velocityY = -2;     // 🟢 Weniger Sprungkraft
-        this.gravity = 0.2;      // 🟢 Sanftere Beschleunigung
-        this.vxAfterDeath = 1.5; // optional für seitliches Wegdriften
+        this.velocityY = -2;
+        this.gravity = 0.2;
+        this.vxAfterDeath = 1.5;
         this.fallAfterDeath = true;
     }
 
-
-
-/** Plays death animation frames. */
-    /**
-     * Plays death animation frames and triggers falling afterward.
-     * @param {Function} [onComplete] - Optional callback after boss has fallen out of view.
-     */
+/**
+* Plays the death animation frame by frame, then triggers the falling motion.
+* Executes optional callback after the boss has fallen off-screen.
+* 
+* @param {Function} [onComplete] - Callback function executed after falling is complete.
+*/
     playDeathAnimation(onComplete) {
         let frame = 0;
-
         const animationInterval = setInterval(() => {
             if (frame < this.IMAGES_DIE.length) {
                 this.setImage(this.IMAGES_DIE[frame]);
                 frame++;
             } else {
                 clearInterval(animationInterval);
-
-                // Starte Fall nach Animation
                 this.fallAfterDeath = true;
-
-                // Warte bis der Boss ganz unten ist (aus dem Canvas gefallen)
                 const fallInterval = setInterval(() => {
                     this.y += this.velocityY;
                     this.velocityY += this.gravity;
-
-                    if (this.y > 600) { // Etwas über Canvas-Höhe hinaus
+                    if (this.y > 600) {
                         clearInterval(fallInterval);
-                        onComplete?.(); // ✅ Endscreen auslösen
+                        onComplete?.();
                     }
                 }, 50);
             }
         }, 400);
     }
-
 }

@@ -1,98 +1,115 @@
+/**
+ * Handles keyboard and mobile input for controlling the character.
+ * Supports directional movement, jumping, and bottle throwing.
+ */
 class InputHandler {
+/**
+ * Creates a new InputHandler instance.
+ * 
+ * @param {Character} character - The player character instance.
+ * @param {World} world - The world instance.
+ */
     constructor(character, world) {
         this.character = character;
         this.world = world;
 
+/**
+ * Stores the current state of relevant keys.
+ * @type {{LEFT: boolean, RIGHT: boolean, UP: boolean, SPACE: boolean}}
+ */
         this.keys = {
             LEFT: false,
             RIGHT: false,
             UP: false,
             SPACE: false,
         };
-
         this.setupListeners();
         this.setupMobileControls();
     }
 
+/** Sets up key listeners for desktop keyboard input. */
     setupListeners() {
         window.addEventListener('keydown', (e) => this.setKey(e.key, true));
         window.addEventListener('keyup', (e) => this.setKey(e.key, false));
     }
 
-
+/** Sets up all mobile button controls for touch-based gameplay. */
     setupMobileControls() {
-        const btnLeft = document.querySelector('.btn-left');
-        const btnRight = document.querySelector('.btn-right');
-        const btnJump = document.querySelector('.btn-jump');
-        const btnThrow = document.querySelector('.btn-throw');
-
-        if (!btnLeft || !btnRight || !btnJump || !btnThrow) return;
-
-        // Hilfsfunktion zum Zurücksetzen aller Keys
-        const resetKeys = () => {
-            this.setKey('ArrowLeft', false);
-            this.setKey('ArrowRight', false);
-            this.setKey('ArrowUp', false);
-            this.setKey(' ', false);
-        };
-
-        // ⬅️ Links
-        btnLeft.addEventListener('pointerdown', () => {
-            resetKeys();
-            this.setKey('ArrowLeft', true);
-        });
-        btnLeft.addEventListener('pointerup', () => this.setKey('ArrowLeft', false));
-        btnLeft.addEventListener('pointerleave', () => this.setKey('ArrowLeft', false));
-
-        // ➡️ Rechts
-        btnRight.addEventListener('pointerdown', () => {
-            resetKeys();
-            this.setKey('ArrowRight', true);
-        });
-        btnRight.addEventListener('pointerup', () => this.setKey('ArrowRight', false));
-        btnRight.addEventListener('pointerleave', () => this.setKey('ArrowRight', false));
-
-        // ⬆️ Springen
-        btnJump.addEventListener('pointerdown', () => {
-            resetKeys();
-            this.setKey('ArrowUp', true);
-        });
-        btnJump.addEventListener('pointerup', () => this.setKey('ArrowUp', false));
-        btnJump.addEventListener('pointerleave', () => this.setKey('ArrowUp', false));
-
-        // 🧴 Werfen
-        btnThrow.addEventListener('pointerdown', () => {
-            resetKeys();
-            this.setKey(' ', true);
-        });
-        btnThrow.addEventListener('pointerup', () => this.setKey(' ', false));
-        btnThrow.addEventListener('pointerleave', () => this.setKey(' ', false));
+        this.bindMobileButton('.btn-left', 'ArrowLeft');
+        this.bindMobileButton('.btn-right', 'ArrowRight');
+        this.bindMobileButton('.btn-jump', 'ArrowUp');
+        this.bindMobileButton('.btn-throw', ' ');
     }
 
+/**
+ * Binds pointer events for a mobile control button.
+ * @param {string} selector - The CSS selector for the button element.
+ * @param {string} keyCode - The simulated key (e.g., 'ArrowLeft', ' ').
+ */
+    bindMobileButton(selector, keyCode) {
+        const button = document.querySelector(selector);
+        if (!button) return;
+        const onDown = () => {
+            this.resetAllKeys();
+            this.setKey(keyCode, true);
+        };
+        const onUp = () => this.setKey(keyCode, false);
+        button.addEventListener('pointerdown', onDown);
+        button.addEventListener('pointerup', onUp);
+        button.addEventListener('pointerleave', onUp);
+    }
 
+/** Resets all directional/interaction keys to false. */
+    resetAllKeys() {
+        this.setKey('ArrowLeft', false);
+        this.setKey('ArrowRight', false);
+        this.setKey('ArrowUp', false);
+        this.setKey(' ', false);
+    }
 
+/**
+ * Updates the key state and triggers corresponding actions.
+ * 
+ * @param {string} key - The key being pressed or released.
+ * @param {boolean} isPressed - Whether the key is pressed (true) or released (false).
+ */
     setKey(key, isPressed) {
-        if (isPressed && !this.world.gameManager.characterCanMove && ['ArrowRight', 'ArrowLeft'].includes(key)) {
+        if (
+            isPressed &&
+            !this.world.gameManager.characterCanMove &&
+            ['ArrowRight', 'ArrowLeft'].includes(key)
+        ) {
             return;
         }
         switch (key) {
             case 'ArrowRight':
-                this.keys.RIGHT = isPressed;
+                this.updateKeyState('RIGHT', isPressed);
                 break;
             case 'ArrowLeft':
-                this.keys.LEFT = isPressed;
+                this.updateKeyState('LEFT', isPressed);
                 break;
             case 'ArrowUp':
+                this.updateKeyState('UP', isPressed);
                 if (isPressed) this.handleJump();
-                this.keys.UP = isPressed;
                 break;
             case ' ':
+                this.updateKeyState('SPACE', isPressed);
                 if (isPressed) this.handleThrow();
-                this.keys.SPACE = isPressed;
                 break;
         }
     }
 
+/**
+    * Updates the internal key state object.
+    * 
+    * @param {string} direction - The key identifier (e.g., 'LEFT', 'RIGHT', 'UP', 'SPACE').
+    * @param {boolean} isPressed - New pressed state.
+    */
+    updateKeyState(direction, isPressed) {
+        this.keys[direction] = isPressed;
+    }
+
+/** Triggers jump if character is on the ground. */
     handleJump() {
         if (!this.character.isInAir) {
             this.world.audio.play('jump');
@@ -100,10 +117,10 @@ class InputHandler {
         }
     }
 
+/** Triggers bottle throw if bottles are available. */
     handleThrow() {
         const boss = this.world.endboss;
-        if (boss?.phase === 'retreat') return; // ⛔️ Blockieren wenn Boss zurückläuft
-
+        if (boss?.phase === 'retreat') return;
         const gm = this.world.gameManager;
         if (gm.availableBottles > 0) {
             this.character.throwBottle(this.world);
@@ -115,21 +132,26 @@ class InputHandler {
         }
     }
 
-
+/**
+ * Returns whether a direction key is currently pressed.
+ * Blocks movement if boss intro or camera lock is active.
+ * 
+ * @param {string} direction - One of "LEFT", "RIGHT", "UP", "SPACE".
+ * @returns {boolean} Whether the direction key is currently pressed.
+ */
     isPressed(direction) {
         const bossIntroActive = this.world.endboss?.isIntroRunning;
         if (
-            (!this.world.gameManager.characterCanMove && ['LEFT', 'RIGHT'].includes(direction)) ||
+            (!this.world.gameManager.characterCanMove &&
+                ['LEFT', 'RIGHT'].includes(direction)) ||
             (bossIntroActive && direction === 'RIGHT')
         ) {
             return false;
         }
-
         return this.keys[direction];
     }
 
-
-
+/** Resets all key states (used when pausing or ending game). */
     resetKeys() {
         for (let key in this.keys) {
             this.keys[key] = false;
