@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: audioManager.class.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: audioManager.class.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Manages all game audio: loading, playing, and stopping sound effects and music.
+ */
+class AudioManager {
+    constructor() {
+        /** @type {Object&lt;string, HTMLAudioElement>} */
+        this.sounds = {
+            jump: this.load('./audio/jump-up-245782.mp3'),
+            throw: this.load('./audio/bottle-pop-45531.mp3'),
+            hurt: this.load('./audio/grunt2-85989.mp3'),
+            win: this.load('./audio/spanish-motifs-329486.mp3'),
+            lose: this.load('./audio/to-you-valladolid-254757.mp3'),
+            bottlePickup: this.load('./audio/bottle-205353.mp3'),
+            coin: this.load('./audio/coins-135571.mp3'),
+            chicken: this.load('./audio/chicken-noise-228106.mp3'),
+            bossHit: this.load('./audio/roaster-crows-2-363352.mp3'),
+            bossIntro: this.load('./audio/dark-drone-351092.mp3'),
+            bossAttack: this.load('./audio/chicken-talk-30453.mp3'),
+            menuMusic: this.load('./audio/spanish-guitar-208363.mp3', true),
+            gameMusic: this.load('./audio/spanish-motifs-329486.mp3', true),
+            longIdle: this.load('./audio/male-snore-1-29322.mp3')
+        };
+
+        this.soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+        this.musicEnabled = localStorage.getItem('musicEnabled') === 'true';
+    }
+
+/**
+* Loads an audio file.
+* @param {string} path - Path to the audio file.
+* @param {boolean} [loop=false] - Whether the audio should loop.
+* @returns {HTMLAudioElement} The loaded audio element.
+*/
+    load(path, loop = false) {
+        const audio = new Audio(path);
+        audio.loop = loop;
+        if (loop) audio.volume = 0.3;
+        return audio;
+    }
+
+/**
+ * Plays a sound by name.
+ * @param {string} name - The name of the sound.
+ */
+    play(name) {
+        const sound = this.sounds[name];
+        if (!sound) return;
+
+        const isMusic = sound.loop;
+        const isAllowed = isMusic ? this.musicEnabled : this.soundEnabled;
+
+        if (isAllowed) {
+            sound.currentTime = 0;
+            sound.play().catch(e => console.warn(`Sound '${name}' failed to play:`, e));
+        }
+    }
+
+
+/**
+ * Stops a sound by name.
+ * @param {string} name - The name of the sound.
+ */
+    stop(name) {
+        const sound = this.sounds[name];
+        if (sound) {
+            sound.pause();
+            sound.currentTime = 0;
+        }
+    }
+
+/** Stops all sounds. */
+    stopAll() {
+        for (const name in this.sounds) {
+            this.stop(name);
+        }
+    }
+
+/** Plays the background music if enabled and stop. */
+    playMusic(name = 'gameMusic') {
+        if (this.musicEnabled) {
+            this.sounds[name]?.play().catch(() => { });
+        }
+    }
+
+/**
+ * Pauses the specified music track if it is currently playing.
+ * 
+ * @param {string} [name='gameMusic'] - The name of the music track to pause.
+ */
+    pauseMusic(name = 'gameMusic') {
+        this.sounds[name]?.pause();
+    }
+
+/** Reloads settings from localStorage. */
+    refreshSettings() {
+        this.soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+        this.musicEnabled = localStorage.getItem('musicEnabled') === 'true';
+    }
+
+/**
+ * Applies audio settings based on the current application state (start screen or in-game).
+ * - Reads user preferences from localStorage.
+ * - Enables/disables music and sound accordingly.
+ * - Starts or stops the appropriate background music.
+ * 
+ * @param {boolean} isStartScreenVisible - Indicates whether the start screen is currently visible.
+ */
+    applySettingsBasedOnState(isStartScreenVisible) {
+        this.musicEnabled = localStorage.getItem('musicEnabled') === 'true';
+        this.soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+
+        this.refreshSettings();
+
+        if (isStartScreenVisible) {
+            if (this.musicEnabled) {
+                this.play('menuMusic');
+            } else {
+                this.stop('menuMusic');
+            }
+        } else {
+            if (this.musicEnabled) {
+                this.play('gameMusic');
+            } else {
+                this.stop('gameMusic');
+            }
+        }
+    }
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AudioManager.html">AudioManager</a></li><li><a href="BackgroundObject.html">BackgroundObject</a></li><li><a href="Bottle.html">Bottle</a></li><li><a href="BottleStatusBar.html">BottleStatusBar</a></li><li><a href="Character.html">Character</a></li><li><a href="CharacterController.html">CharacterController</a></li><li><a href="Chicken.html">Chicken</a></li><li><a href="Cloud.html">Cloud</a></li><li><a href="Coin.html">Coin</a></li><li><a href="CoinStatusBar.html">CoinStatusBar</a></li><li><a href="Endboss.html">Endboss</a></li><li><a href="EndbossController.html">EndbossController</a></li><li><a href="EndbossStatusBar.html">EndbossStatusBar</a></li><li><a href="GameManager.html">GameManager</a></li><li><a href="InputHandler.html">InputHandler</a></li><li><a href="Level.html">Level</a></li><li><a href="MovableObject.html">MovableObject</a></li><li><a href="StatusBar.html">StatusBar</a></li><li><a href="StatusBarManager.html">StatusBarManager</a></li><li><a href="ThrowableObject.html">ThrowableObject</a></li><li><a href="World.html">World</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Jul 08 2025 20:53:19 GMT+0200 (Mitteleuropäische Sommerzeit)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

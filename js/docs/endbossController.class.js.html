@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: endbossController.class.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: endbossController.class.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Handles the logic related to the Endboss character.
+ * Manages activation, behavior, intro sequence, and camera interaction.
+ */
+class EndbossController {
+/**
+ * @param {World} world - Reference to the World instance.
+ */
+    constructor(world) {
+        this.world = world;
+        this.endboss = null;
+        this.bossFocusActive = false;
+    }
+
+/**
+ * Called every frame to update boss state and camera logic.
+ */
+    update() {
+        this.checkActivation();
+        this.updateBehavior();
+        this.updateCamera();
+    }
+
+/**
+ * Checks if the Endboss should be activated based on character position.
+ */
+    checkActivation() {
+        if (this.world.gameOverHandled) return;
+        if (!this.world.bossActivated &amp;&amp; this.world.character.x > 2200) {
+            this.activate();
+        }
+    }
+
+/**
+ * Activates the Endboss, starts the intro sequence, and locks camera/player movement.
+ */
+    activate() {
+        this.endboss = new Endboss();
+        this.endboss.world = this.world;
+        this.endboss.statusBarManager = this.world.statusBarManager;
+
+        this.endboss.onIntroStart = () => this.handleIntroStart();
+        this.endboss.onIntroEnd = () => this.handleIntroEnd();
+
+        this.world.endboss = this.endboss;
+        this.world.bossActivated = true;
+        this.bossFocusActive = true;
+        this.world.statusBarManager.showBossHealthBar = true;
+        this.world.audio.play('bossIntro');
+        this.lockCameraAndCharacter();
+
+        this.endboss.startIntroAnimation();
+    }
+
+/**
+ * Locks the camera and disables character movement and idle animations during intro.
+ */
+    lockCameraAndCharacter() {
+        this.world.cameraLocked = true;
+        this.world.characterCanMove = false;
+        this.world.preventIdle = true;
+    }
+
+/**
+ * Called at the start of the Endboss intro animation.
+ * Disables chickens and updates boss health bar.
+ */
+    handleIntroStart() {
+        this.world.statusBarManager.showBossHealthBar = true;
+        this.world.statusBarManager.updateBossHealth(this.world.endboss.energy);
+        this.world.gameManager.chickens = [];
+        this.world.character.longIdlePermanentlyDisabled = true;
+        this.world.preventIdle = true;
+    }
+
+/**
+ * Called at the end of the Endboss intro animation.
+ * Unlocks camera and re-enables character movement.
+ */
+    handleIntroEnd() {
+        this.world.characterCanMove = true;
+        this.world.cameraLocked = false;
+        this.world.preventIdle = false;
+    }
+
+/**
+ * Updates the Endboss behavior (movement, AI, falling, etc.).
+ */
+    updateBehavior() {
+        if (!this.endboss || this.world.gameOverHandled) return;
+        const boss = this.endboss;
+        const pepe = this.world.character;
+        if (!boss.introPlayed) {
+            boss.moveLeft();
+        } else {
+            this.pursueTarget(pepe);
+        }
+        if (boss.fallAfterDeath) {
+            boss.y += boss.velocityY;
+            boss.velocityY += boss.gravity;
+            boss.rotationAngle += 0.05;
+        }
+        this.world.addToMap(boss);
+    }
+
+/**
+ * Updates the camera position during boss intro sequence.
+ */
+    updateCamera() {
+        if (this.world.cameraLocked) {
+            this.world.camera_x = this.endboss.x - 200;
+        }
+    }
+
+/**
+ * Controls boss behavior based on its current phase.
+ * 
+ * @param {Character} character - The player character to pursue.
+ */
+    pursueTarget(character) {
+        const boss = this.endboss;
+        if (this.shouldSkipPursuit()) return;
+
+        switch (boss.phase) {
+            case 'attack':
+                this.pursueAndAttack(character);
+                break;
+            case 'retreat':
+                this.moveBackToIntroPosition();
+                break;
+            case 'wait':
+                // Do nothing
+                break;
+        }
+    }
+
+/**
+ * Checks if the Endboss is close enough to attack and deals damage if applicable.
+ * 
+ * @param {Character} character - The player character to potentially attack.
+ */
+    checkAttack(character) {
+        const boss = this.endboss;
+        const distance = Math.abs(boss.x - character.x);
+        const now = Date.now();
+        const attackRange = 80;
+        if (!boss.lastAttackTime) boss.lastAttackTime = 0;
+        if (this.canAttack(distance, now)) {
+            boss.startAttacking();
+            character.takeDamage(20);
+            boss.lastAttackTime = now;
+            this.world.statusBarManager.updateCharacterHealth();
+            boss.phase = 'retreat';
+            this.world.bossFocusActive = true;
+            boss.stopWalkingAnimation();
+        }
+    }
+
+/**
+ * Determines whether the Endboss is allowed to attack.
+ * 
+ * @param {number} distance - Distance to the player.
+ * @param {number} now - Current timestamp.
+ * @returns {boolean} True if the boss can attack.
+ */
+    canAttack(distance, now) {
+        const b = this.endboss;
+        return (
+            distance &lt; 80 &amp;&amp;
+            !b.isDead &amp;&amp;
+            !b.isHurt &amp;&amp;
+            !b.isStunned &amp;&amp;
+            now - b.lastAttackTime > 1000
+        );
+    }
+
+/**
+ * Moves the boss back to the intro position to reset the fight.
+ * Triggers intro again when reached.
+ */
+    moveBackToIntroPosition() {
+        const boss = this.endboss;
+        const pepe = this.world.character;
+        const stopX = pepe.x + 720;
+
+        if (boss.x &lt; stopX) {
+            boss.x += boss.speed;
+            boss.otherDirection = true;
+            boss.startWalkingAnimation();
+        } else {
+            boss.stopWalkingAnimation();
+            boss.otherDirection = false;
+            boss.phase = 'wait';
+            boss.introPlayed = false;
+            boss.startIntroAnimation();
+        }
+    }
+
+/**
+ * Moves the boss toward the character and initiates an attack if in range.
+ * 
+ * @param {Character} character - The player character.
+ */
+    pursueAndAttack(character) {
+        const boss = this.endboss;
+        const dist = character.x - boss.x;
+
+        if (Math.abs(dist) > 20) {
+            boss.moveTowardsTarget(dist);
+            boss.startWalkingAnimation();
+        } else {
+            boss.stopWalkingAnimation();
+        }
+
+        this.checkAttack(character);
+    }
+
+/**
+ * Determines if the boss should currently skip pursuing the player.
+ * 
+ * @returns {boolean} True if boss is dead, hurt, stunned, or has no energy.
+ */
+    shouldSkipPursuit() {
+        return this.isDead || this.isHurt || this.isStunned || this.energy &lt;= 0;
+    }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AudioManager.html">AudioManager</a></li><li><a href="BackgroundObject.html">BackgroundObject</a></li><li><a href="Bottle.html">Bottle</a></li><li><a href="BottleStatusBar.html">BottleStatusBar</a></li><li><a href="Character.html">Character</a></li><li><a href="CharacterController.html">CharacterController</a></li><li><a href="Chicken.html">Chicken</a></li><li><a href="Cloud.html">Cloud</a></li><li><a href="Coin.html">Coin</a></li><li><a href="CoinStatusBar.html">CoinStatusBar</a></li><li><a href="Endboss.html">Endboss</a></li><li><a href="EndbossController.html">EndbossController</a></li><li><a href="EndbossStatusBar.html">EndbossStatusBar</a></li><li><a href="GameManager.html">GameManager</a></li><li><a href="InputHandler.html">InputHandler</a></li><li><a href="Level.html">Level</a></li><li><a href="MovableObject.html">MovableObject</a></li><li><a href="StatusBar.html">StatusBar</a></li><li><a href="StatusBarManager.html">StatusBarManager</a></li><li><a href="ThrowableObject.html">ThrowableObject</a></li><li><a href="World.html">World</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Jul 08 2025 20:53:19 GMT+0200 (Mitteleuropäische Sommerzeit)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

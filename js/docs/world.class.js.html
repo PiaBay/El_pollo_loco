@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: world.class.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: world.class.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Represents the game world, including rendering, game logic, audio, and object handling.
+ */
+class World {
+canvas;
+ctx;
+character;
+camera_x = 0;
+
+/**
+ * Initializes a new World instance.
+ * @param {HTMLCanvasElement} canvas - The canvas element.
+ * @param {CanvasRenderingContext2D} ctx - The 2D rendering context.
+ * @param {Character} character - The main playable character.
+ * @param {AudioManager} [audio] - The audio manager (optional).
+ */
+    constructor(canvas, ctx, character, audio = null) {
+        this.canvas = canvas;
+        this.ctx = ctx;
+        this.audio = audio || window.audio;
+
+        this.character = character;
+        this.character.world = this;
+        this.gameManager = new GameManager(this, this.audio);
+        this.endbossController = new EndbossController(this);
+        this.statusBarManager = new StatusBarManager(
+            this.character,
+            this.gameManager,
+        );
+        this.inputHandler = new InputHandler(this.character, this);
+        this.characterController = new CharacterController(this.character, this, this.inputHandler);
+        this.gameManager.loadLevelContent();
+        this.gameManager.initLevelItems();
+        this.draw();
+    }
+
+/**
+ * Starts the game loop and continuously renders the game.
+ */
+    draw() {
+        if (!window.frameCount) {
+            window.frameCount = 0;
+            setInterval(() => {
+                window.frameCount = 0;
+            }, 1000);
+        }
+        window.frameCount++;
+        if (this.gameOverHandled) return;
+
+        this.character.applyGravity();
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.ctx.save();
+        this.ctx.translate(-this.camera_x, 0);
+        this.drawWorldElements();
+        this.ctx.restore();
+
+        this.drawStatusBars();
+        this.animationFrameId = requestAnimationFrame(() => this.draw());
+    }
+
+/**
+ * Renders and updates all world elements.
+ */
+    drawWorldElements() {
+        this.drawBackground();
+        this.updateWorldState();
+        if (this.gameManager.checkEndConditions()) return;
+        this.drawWorldObjects();
+
+    }
+
+/**
+ * Draws all background elements.
+ */
+    drawBackground() {
+        this.addObjectsToMap(this.gameManager.backgroundObjects);
+        this.addObjectsToMap(this.gameManager.clouds);
+    }
+
+/**
+ * Updates all dynamic world entities.
+ */
+    updateWorldState() {
+        this.endbossController.checkActivation();
+        this.updateEnemies();
+        this.characterController.update();
+        this.updateCoins();
+        this.updateBottles();
+        this.updateThrowables();
+        this.endbossController.update();
+
+        if (this.endbossController.endboss?.isDead) {
+            this.endbossController.bossFocusActive = false;
+        }
+    }
+
+/**
+ * Renders all visible game objects.
+ */
+    drawWorldObjects() {
+        this.addToMap(this.character);
+        this.addObjectsToMap(this.gameManager.coins);
+        this.addObjectsToMap(this.gameManager.bottles);
+        this.addObjectsToMap(this.gameManager.throwables);
+        this.gameManager.throwables.forEach(b => {
+            if (b.x &lt; this.character.x + this.canvas.width) {
+                b.move();
+            }
+        });        
+        if (!this.endbossController?.endboss?.isIntroRunning) {
+            this.addObjectsToMap(this.gameManager.chickens);
+        }
+
+        const boss = this.endbossController.endboss;
+        if (this.bossActivated &amp;&amp; boss &amp;&amp; !this.gameOverHandled) {
+            this.addToMap(boss);
+        }
+    }
+
+/**
+ * Draws all status bars (health, bottles, coins, boss).
+ */
+    drawStatusBars() {
+        this.statusBarManager.drawAll(this.ctx);
+    }
+
+/**
+ * Handles coin collection and status update.
+ */
+    updateCoins() {
+        this.gameManager.coins = this.gameManager.coins.filter((coin) => {
+            if (coin.isCollectedBy(this.character)) {
+                this.gameManager.collectedCoins++;
+                this.statusBarManager.updateCoins(
+                    this.gameManager.collectedCoins,
+                    this.gameManager.totalCoins
+                );
+                this.audio.play('coin');
+                return false;
+            }
+            return true;
+        });
+    }
+
+/**
+ * Handles chicken movement, collision, and jump-kill or damage.
+ */
+    updateEnemies() {
+        this.gameManager.chickens = this.gameManager.chickens.filter(chicken => {
+            chicken.moveLeft();
+
+            if (this.character.isDead) return true;
+            if (!this.character.isColliding(chicken)) return true;
+
+            if (this.characterController.handleJumpKill(chicken)) return false;
+            if (this.character.canTakeDamage()) {
+                this.characterController.handleHit();
+                return false;
+            }
+
+            return true;
+        });
+    }
+
+/**
+ * Handles bottle collection and status update.
+ */
+    updateBottles() {
+        this.gameManager.bottles = this.gameManager.bottles.filter((bottle) => {
+            if (bottle.isCollectedBy(this.character)) {
+                this.gameManager.collectedBottles += 5;
+                this.gameManager.availableBottles += 5;
+                this.statusBarManager.updateBottles(
+                    this.gameManager.availableBottles,
+                    this.gameManager.maxBottleCapacity
+                );
+                this.audio.play('bottlePickup');
+                return false;
+            }
+            return true;
+        });
+    }
+
+/**
+ * Handles thrown bottle movement and collision with the endboss.
+ */
+    updateThrowables() {
+        this.gameManager.throwables = this.gameManager.throwables.filter((bottle) => {
+            bottle.move();
+            const boss = this.endbossController?.endboss;
+            const collides = boss &amp;&amp; boss.isColliding(bottle);
+
+            if (this.bossActivated &amp;&amp; collides) {
+                this.audio.play('bossHit');
+                boss.hit(30); // Endboss reagiert inkl. Rücklauf
+                return false; // Flasche verschwindet
+            }
+
+            return bottle.x &lt;= this.character.x + 720;
+        });
+    }
+
+/**
+ * Draws a list of objects onto the canvas.
+ * @param {MovableObject[]} objects - List of drawable objects.
+ */
+    addObjectsToMap(objects) {
+        objects.forEach(o => this.addToMap(o));
+    }
+
+/**
+ * Draws a single object, flipped if facing left.
+ * @param {MovableObject} mo - Movable object to render.
+ **/
+    addToMap(mo) {
+        if (!mo.img) return;
+        const isFlipped = mo.otherDirection;
+        if (mo instanceof Endboss &amp;&amp; mo.isDead &amp;&amp; mo.fallAfterDeath) {
+            this.ctx.save();
+            const cx = mo.x + mo.width / 2;
+            const cy = mo.y + mo.height / 2;
+            this.ctx.translate(cx, cy);
+            this.ctx.rotate(0.3);
+            this.ctx.drawImage(mo.img, -mo.width / 2, -mo.height / 2, mo.width, mo.height);
+            this.ctx.restore();
+        } else if (isFlipped) {
+            this.ctx.save();
+            this.ctx.scale(-1, 1);
+            this.ctx.drawImage(mo.img, -mo.x - mo.width, mo.y, mo.width, mo.height);
+            this.ctx.restore();
+        } else {
+            this.ctx.drawImage(mo.img, mo.x, mo.y, mo.width, mo.height);
+        }
+    }
+}
+window.World = World;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AudioManager.html">AudioManager</a></li><li><a href="BackgroundObject.html">BackgroundObject</a></li><li><a href="Bottle.html">Bottle</a></li><li><a href="BottleStatusBar.html">BottleStatusBar</a></li><li><a href="Character.html">Character</a></li><li><a href="CharacterController.html">CharacterController</a></li><li><a href="Chicken.html">Chicken</a></li><li><a href="Cloud.html">Cloud</a></li><li><a href="Coin.html">Coin</a></li><li><a href="CoinStatusBar.html">CoinStatusBar</a></li><li><a href="Endboss.html">Endboss</a></li><li><a href="EndbossController.html">EndbossController</a></li><li><a href="EndbossStatusBar.html">EndbossStatusBar</a></li><li><a href="GameManager.html">GameManager</a></li><li><a href="InputHandler.html">InputHandler</a></li><li><a href="Level.html">Level</a></li><li><a href="MovableObject.html">MovableObject</a></li><li><a href="StatusBar.html">StatusBar</a></li><li><a href="StatusBarManager.html">StatusBarManager</a></li><li><a href="ThrowableObject.html">ThrowableObject</a></li><li><a href="World.html">World</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Jul 08 2025 20:53:19 GMT+0200 (Mitteleuropäische Sommerzeit)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
