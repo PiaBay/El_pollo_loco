@@ -293,13 +293,14 @@ class Endboss extends MovableObject {
 * @param {number} dist - Distance between boss and target (positive or negative).
 */
     moveTowardsTarget(dist) {
-        if (dist < 0) {
-            this.x -= this.speed;
-            this.otherDirection = false;
-        } else {
+        if (dist > 0) {
             this.x += this.speed;
             this.otherDirection = true;
+        } else {
+            this.x -= this.speed;
+            this.otherDirection = false;
         }
+
     }
 
 /**

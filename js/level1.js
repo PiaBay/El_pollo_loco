@@ -53,12 +53,13 @@ function createBottles() {
  */
 function createEnemies() {
     let enemies = [];
-    for (let i = 0; i < 5; i++) {
-        let xPos = 600 + i * 500 + Math.random() * 200;
+    for (let i = 0; i < 15; i++) {
+        let xPos = 600 + i * 300 + Math.random() * 150;
         enemies.push(new Chicken(xPos));
     }
     return enemies;
 }
+
 
 /**
  * Creates and returns an array of Cloud objects for the sky layer.
@@ -72,12 +73,6 @@ function createClouds() {
     ];
 }
 
-/**
- * Creates and returns an array of BackgroundObject instances for multiple parallax layers.
- * Layers include sky, third, second, and first visual background layers.
- * 
- * @returns {BackgroundObject[]} An array of background elements.
- */
 /**
  * Creates and returns the full background array with all layers.
  * 

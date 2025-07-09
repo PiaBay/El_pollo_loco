@@ -38,13 +38,13 @@ class Bottle extends MovableObject {
  * @returns {boolean} True if the bottle is within the character's bounds, false otherwise.
  */
     isCollectedBy(character) {
-        const offset = 6; // Optional margin for more lenient collision
+        const offsetX = 5;
 
         return (
-            this.x + this.width > character.x + offset &&
-            this.x < character.x + character.width - offset &&
-            this.y + this.height > character.y + offset &&
-            this.y < character.y + character.height - offset
+            this.x + this.width > character.x + offsetX &&
+            this.x < character.x + character.width - offsetX &&
+            this.y + this.height > character.y + character.height * 0.4 &&
+            this.y < character.y + character.height * 0.9
         );
     }
 }

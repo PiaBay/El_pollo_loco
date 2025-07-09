@@ -148,15 +148,19 @@ camera_x = 0;
  */
     updateEnemies() {
         this.gameManager.chickens = this.gameManager.chickens.filter(chicken => {
+            if (!chicken) return false;
+
             chicken.moveLeft();
 
             if (this.character.isDead) return true;
-            if (!this.character.isColliding(chicken)) return true;
 
-            if (this.characterController.handleJumpKill(chicken)) return false;
+            if (!this.character.isColliding(chicken)) return true;
+            if (this.characterController.handleJumpKill(chicken)) {
+                return false;
+            }
             if (this.character.canTakeDamage()) {
                 this.characterController.handleHit();
-                return false;
+                return true;
             }
 
             return true;
@@ -188,15 +192,22 @@ camera_x = 0;
     updateThrowables() {
         this.gameManager.throwables = this.gameManager.throwables.filter((bottle) => {
             bottle.move();
+
             const boss = this.endbossController?.endboss;
-            const collides = boss && boss.isColliding(bottle);
+            const collidesWithBoss = boss && boss.isColliding(bottle);
 
-            if (this.bossActivated && collides) {
+            if (this.bossActivated && collidesWithBoss) {
                 this.audio.play('bossHit');
-                boss.hit(30); // Endboss reagiert inkl. Rücklauf
-                return false; // Flasche verschwindet
+                boss.hit(30); // Schaden beim Boss
+                return false; // Flasche entfernen
             }
-
+            this.gameManager.chickens = this.gameManager.chickens.filter((chicken) => {
+                if (bottle.isColliding(chicken)) {
+                    // Optional: this.audio.play('chickenHit');
+                    return false; // Chicken entfernen
+                }
+                return true;
+            });
             return bottle.x <= this.character.x + 720;
         });
     }

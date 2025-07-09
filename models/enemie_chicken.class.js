@@ -26,11 +26,11 @@ class Chicken extends MovableObject {
         this.y = 330;
         this.width = 70;
         this.height = 90;
-        this.speed = 0.3 + Math.random() * 0.6; // Random speed between 0.3 and 0.9
+        this.speed = 0.6 + Math.random() * 0.6;
 
         this.loadImages(this.IMAGES_WALKING, () => {
             this.setImage(this.IMAGES_WALKING[0]);
-            this.startAnimation(this.IMAGES_WALKING, 150); // 150ms per frame
+            this.startAnimation(this.IMAGES_WALKING, 150);
             if (onReadyCallback) onReadyCallback(this);
         });
     }

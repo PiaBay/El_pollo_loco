@@ -17,10 +17,6 @@ class Character extends MovableObject {
     isInLongIdle = false;  
     longIdlePermanentlyDisabled = false;
 
-/** Timing for damage cooldown */
-    lastHitTime = 0;
-    hurtCooldown = 400;
-
 /** Health and speed */
     energy = 100;
     animationSpeed = 80;
@@ -104,7 +100,7 @@ class Character extends MovableObject {
         this.width = 120;
         this.height = 240;
         this.lastHitTime = 0;
-        this.hurtCooldown = 200;
+        this.hurtCooldown = 1000;
 
         this.loadImages(this.IMAGES_IDLE, () => this.setImage(this.IMAGES_IDLE[0]));
         this.loadImages(this.IMAGES_LONG_IDLE);
@@ -143,8 +139,7 @@ class Character extends MovableObject {
  * Ensures the character stays within level bounds and triggers walking animation.
  */
     moveRight() {
-        if (this.isDead || this.isStunned) return;
-
+        if (this.isDead || this.isInAir) return; 
         this.interruptIdleAndMarkActive();
         const maxRight = 3500 - this.width;
         if (this.x < maxRight) this.x += this.speed;
@@ -157,8 +152,7 @@ class Character extends MovableObject {
  * Ensures the character does not move past the level's left boundary and triggers walking animation.
  */
     moveLeft() {
-        if (this.isDead || this.isStunned) return;
-
+        if (this.isDead || this.isInAir) return; 
         this.interruptIdleAndMarkActive();
         if (this.x > 0) this.x -= this.speed;
         this.otherDirection = true;
@@ -214,13 +208,32 @@ class Character extends MovableObject {
         }
     }
 
+    /**
+ * Plays the idle animation if character is standing still.
+ * Prevents restarting if already running.
+ */
+    playIdleAnimation() {
+        if (this.isDead || this.walking || this.isHurt || this.isInAir || this.isInLongIdle) return;
+
+        // Wenn keine andere Animation läuft
+        if (!this.animationInterval) {
+            this.currentImage = 0;
+            this.startAnimation(this.IMAGES_IDLE, 200);
+        }
+    }
+
+
+
 /**
  * Checks if the character has been idle long enough to trigger the long idle animation.
  * Only runs when not walking, jumping, hurt, dead, or already in long idle.
  */
     checkLongIdleAnimation() {
         if (this.longIdlePermanentlyDisabled) return;
+
         const now = Date.now();
+        const idleDuration = now - this.lastMovementTime;
+
         if (
             !this.walking &&
             !this.isDead &&
@@ -228,11 +241,15 @@ class Character extends MovableObject {
             !this.isInAir &&
             !this.isInLongIdle
         ) {
-            if (now - this.lastMovementTime > 2000) {
+            if (idleDuration > 1000 && idleDuration < 15000) {
+                this.playIdleAnimation();
+            }
+            if (idleDuration >= 15000) {
                 this.playLongIdleAnimation();
             }
         }
     }
+
 
 /**
  * Plays the long idle animation after a delay of inactivity.

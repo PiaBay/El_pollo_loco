@@ -103,12 +103,13 @@ class EndbossController {
         this.world.addToMap(boss);
     }
 
-/**
- * Updates the camera position during boss intro sequence.
- */
+    /**
+     * Updates the camera position during boss intro sequence.
+     * Keeps camera fixed on the player character.
+     */
     updateCamera() {
         if (this.world.cameraLocked) {
-            this.world.camera_x = this.endboss.x - 200;
+            this.world.camera_x = this.world.character.x - 100;
         }
     }
 
@@ -126,7 +127,7 @@ class EndbossController {
                 this.pursueAndAttack(character);
                 break;
             case 'retreat':
-                this.moveBackToIntroPosition();
+                this.startRetreat();
                 break;
             case 'wait':
                 // Do nothing
@@ -174,44 +175,73 @@ class EndbossController {
         );
     }
 
-/**
- * Moves the boss back to the intro position to reset the fight.
- * Triggers intro again when reached.
- */
-    moveBackToIntroPosition() {
+    /**
+     * Initiates the Endboss retreat movement after an attack.
+     * Reduces speed, sets a target position, and starts movement interval.
+     */
+    startRetreat() {
         const boss = this.endboss;
-        const pepe = this.world.character;
-        const stopX = pepe.x + 720;
 
-        if (boss.x < stopX) {
-            boss.x += boss.speed;
-            boss.otherDirection = true;
+        if (!boss.walking) {
             boss.startWalkingAnimation();
-        } else {
+        }
+
+        this.oldSpeed = boss.speed;
+        boss.speed = 5;
+
+        this.retreatDistance = 60;
+        this.retreatDirection = boss.otherDirection ? -1 : 1;
+        this.retreatTargetX = boss.x + (this.retreatDistance * this.retreatDirection);
+
+        this.retreatInterval = setInterval(() => {
+            this.continueRetreatMovement();
+        }, 40);
+    }
+
+    /**
+     * Handles retreat movement step-by-step.
+     * Stops movement when target is reached and resumes normal behavior.
+     */
+    continueRetreatMovement() {
+        const boss = this.endboss;
+        boss.x += boss.speed * this.retreatDirection;
+
+        const reached = this.retreatDirection > 0
+            ? boss.x >= this.retreatTargetX
+            : boss.x <= this.retreatTargetX;
+
+        if (reached) {
+            clearInterval(this.retreatInterval);
             boss.stopWalkingAnimation();
-            boss.otherDirection = false;
+            boss.speed = this.oldSpeed;
             boss.phase = 'wait';
-            boss.introPlayed = false;
-            boss.startIntroAnimation();
+
+            setTimeout(() => {
+                boss.phase = 'attack';
+            }, 1000);
         }
     }
 
-/**
- * Moves the boss toward the character and initiates an attack if in range.
- * 
- * @param {Character} character - The player character.
- */
+
+
+    /**
+     * Moves the boss toward the character and initiates an attack if in range.
+     * 
+     * @param {Character} character - The player character.
+     */
     pursueAndAttack(character) {
         const boss = this.endboss;
         const dist = character.x - boss.x;
-
-        if (Math.abs(dist) > 20) {
+        const minDistance = 30;
+        const isTooClose = Math.abs(dist) < minDistance;
+        if (!isTooClose) {
             boss.moveTowardsTarget(dist);
-            boss.startWalkingAnimation();
+            if (!boss.walking) {
+                boss.startWalkingAnimation();
+            }
         } else {
             boss.stopWalkingAnimation();
         }
-
         this.checkAttack(character);
     }
 
@@ -221,6 +251,8 @@ class EndbossController {
  * @returns {boolean} True if boss is dead, hurt, stunned, or has no energy.
  */
     shouldSkipPursuit() {
-        return this.isDead || this.isHurt || this.isStunned || this.energy <= 0;
+        const b = this.endboss;
+        return b.isDead || b.isHurt || b.isStunned || b.energy <= 0;
     }
+
 }

@@ -87,6 +87,7 @@ class GameManager {
         const screen = document.getElementById('end-screen');
         const text = document.getElementById('end-text');
         const image = document.getElementById('end-image');
+
         if (won) {
             text.innerText = 'You Won!';
             image.src = './assets/img_pollo_locco/img/You won, you lost/You Win A.png';
@@ -99,6 +100,8 @@ class GameManager {
         this.stopGameLoop();
         this.setGameOver();
         screen.classList.remove('hidden');
+        document.querySelector('.game-controls')?.classList.add('hidden');
+
     }
 
 /** Stops the animation loop and background music. */
