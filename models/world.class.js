@@ -38,6 +38,8 @@ camera_x = 0;
  * Starts the game loop and continuously renders the game.
  */
     draw() {
+        if (this.gameOverHandled) return; // ⛔ STOPP GANZ AM ANFANG!
+
         if (!window.frameCount) {
             window.frameCount = 0;
             setInterval(() => {
@@ -45,7 +47,6 @@ camera_x = 0;
             }, 1000);
         }
         window.frameCount++;
-        if (this.gameOverHandled) return;
 
         this.character.applyGravity();
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -56,7 +57,9 @@ camera_x = 0;
         this.ctx.restore();
 
         this.drawStatusBars();
-        this.animationFrameId = requestAnimationFrame(() => this.draw());
+        if (!this.gameOverHandled) {
+            this.animationFrameId = requestAnimationFrame(() => this.draw());
+        }
     }
 
 /**
@@ -185,7 +188,6 @@ camera_x = 0;
             return true;
         });
     }
-
 /**
  * Handles thrown bottle movement and collision with the endboss.
  */

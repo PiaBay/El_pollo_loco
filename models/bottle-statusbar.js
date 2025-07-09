@@ -37,11 +37,11 @@ class BottleStatusBar extends MovableObject {
  * @param {number} collectedBottles - Number of bottles collected by the player.
  * @param {number} [totalBottles=10] - Total number of bottles available in the level.
  */
-    setBottles(collectedBottles, totalBottles = 10) {
-        const percentage = Math.min(100, (collectedBottles / totalBottles) * 100);
-        this.setPercentage(percentage);
-        this.current = collectedBottles;
-        this.total = totalBottles;
+    setBottles(current, max) {
+        this.current = current;
+        this.max = max;
+        const percentage = (current / max) * 100;
+        this.setPercentage(percentage);  // sollte auch bei 0% korrekt anzeigen
     }
 
 /**

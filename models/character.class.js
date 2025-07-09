@@ -139,12 +139,16 @@ class Character extends MovableObject {
  * Ensures the character stays within level bounds and triggers walking animation.
  */
     moveRight() {
-        if (this.isDead || this.isInAir) return; 
+        if (this.isDead || this.isInAir || this.isJumping) return;
+
         this.interruptIdleAndMarkActive();
+
         const maxRight = 3500 - this.width;
-        if (this.x < maxRight) this.x += this.speed;
-        this.otherDirection = false;
-        this.startWalkingAnimation();
+        if (this.x < maxRight) {
+            this.x += this.speed;
+            this.otherDirection = false;
+            this.startWalkingAnimation();
+        }
     }
 
 /**
@@ -152,7 +156,7 @@ class Character extends MovableObject {
  * Ensures the character does not move past the level's left boundary and triggers walking animation.
  */
     moveLeft() {
-        if (this.isDead || this.isInAir) return; 
+        if (this.isDead || this.isInAir || this.isJumping) return;
         this.interruptIdleAndMarkActive();
         if (this.x > 0) this.x -= this.speed;
         this.otherDirection = true;
@@ -191,7 +195,7 @@ class Character extends MovableObject {
  * @param {number} amount - The amount of damage to apply.
  */
     takeDamage(amount) {
-        if (this.isDead || !this.canTakeDamage()) return;
+        if (this.isDead || this.isStunned || !this.canTakeDamage()) return;
         this.energy = Math.max(0, this.energy - amount);
         this.lastHitTime = Date.now();
         this.isHurt = true;
@@ -309,18 +313,26 @@ class Character extends MovableObject {
  * 
  * @param {World} world - The current game world instance.
  */
+
     throwBottle(world) {
+        if (this.isDead || this.isStunned || this.isHurt) return;
         if (world.gameManager.availableBottles <= 0) return;
         const boss = world.endbossController?.endboss;
         if (world.gameManager.bossActivated && boss?.isHurt) return;
+
         this.interruptIdleAndMarkActive();
-        const bottle = new ThrowableObject(this.x + 30, this.y, this.otherDirection);
+
+        const offsetX = 30;
+        const handHeight = this.y + this.height * 0.4; // 👉 ca. Handhöhe (40 % der Körperhöhe)
+        const bottle = new ThrowableObject(this.x + offsetX, handHeight, this.otherDirection);
+
         world.gameManager.throwables.push(bottle);
         world.gameManager.availableBottles--;
         world.statusBarManager.updateBottles(
             world.gameManager.availableBottles,
             world.gameManager.maxBottleCapacity
         );
+
         if (world.audio) {
             world.audio.play('throw');
         }

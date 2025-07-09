@@ -62,6 +62,8 @@ class GameManager {
         this.characterCanMove = false;
         this.cameraLocked = true;
         this.preventIdle = true;
+        pauseGame();
+
     }
 
 /**
@@ -84,6 +86,7 @@ class GameManager {
  * @param {boolean} won - Whether the player won the game.
  */
     showEndScreen(won) {
+        pauseGame();
         const screen = document.getElementById('end-screen');
         const text = document.getElementById('end-text');
         const image = document.getElementById('end-image');
@@ -100,8 +103,10 @@ class GameManager {
         this.stopGameLoop();
         this.setGameOver();
         screen.classList.remove('hidden');
-        document.querySelector('.game-controls')?.classList.add('hidden');
-
+        const controls = document.querySelector('.game-controls');
+        if (controls) {
+            controls.classList.add('hidden');
+        }
     }
 
 /** Stops the animation loop and background music. */

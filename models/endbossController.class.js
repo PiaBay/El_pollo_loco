@@ -69,7 +69,6 @@ class EndbossController {
         this.world.statusBarManager.showBossHealthBar = true;
         this.world.statusBarManager.updateBossHealth(this.world.endboss.energy);
         this.world.gameManager.chickens = [];
-        this.world.character.longIdlePermanentlyDisabled = true;
         this.world.preventIdle = true;
     }
 
@@ -108,9 +107,7 @@ class EndbossController {
      * Keeps camera fixed on the player character.
      */
     updateCamera() {
-        if (this.world.cameraLocked) {
-            this.world.camera_x = this.world.character.x - 100;
-        }
+        this.world.camera_x = this.world.character.x - 100;
     }
 
 /**
@@ -187,16 +184,34 @@ class EndbossController {
         }
 
         this.oldSpeed = boss.speed;
-        boss.speed = 5;
+        boss.speed = 6; // etwas schneller für flüssiges Retreat
 
-        this.retreatDistance = 60;
+        this.retreatDistance = 50;
         this.retreatDirection = boss.otherDirection ? -1 : 1;
-        this.retreatTargetX = boss.x + (this.retreatDistance * this.retreatDirection);
 
-        this.retreatInterval = setInterval(() => {
-            this.continueRetreatMovement();
-        }, 40);
+        const rawTargetX = boss.x + (this.retreatDistance * this.retreatDirection);
+        const minX = 0;
+        const maxX = 3600 - boss.width;
+        this.retreatTargetX = Math.min(Math.max(rawTargetX, minX), maxX);
+
+        this.retreatInProgress = true;
+        this.animateRetreat(); // neue Animationsschleife starten
     }
+
+/**
+ * Continuously animates the Endboss retreat using requestAnimationFrame.
+ * Smoothly moves the boss step-by-step until the target retreat position is reached.
+ * Keeps the camera locked on the player character (Pepe) during the retreat.
+ */
+    animateRetreat() {
+        if (!this.retreatInProgress) return;
+
+        this.continueRetreatMovement();      // Move boss slightly towards retreat target
+        this.updateCamera();                 // Keep camera fixed on character (Pepe)
+
+        requestAnimationFrame(() => this.animateRetreat()); // Schedule next frame
+    }
+
 
     /**
      * Handles retreat movement step-by-step.
@@ -211,18 +226,16 @@ class EndbossController {
             : boss.x <= this.retreatTargetX;
 
         if (reached) {
-            clearInterval(this.retreatInterval);
+            this.retreatInProgress = false;
             boss.stopWalkingAnimation();
             boss.speed = this.oldSpeed;
             boss.phase = 'wait';
 
             setTimeout(() => {
                 boss.phase = 'attack';
-            }, 1000);
+            }, 500);
         }
     }
-
-
 
     /**
      * Moves the boss toward the character and initiates an attack if in range.

@@ -53,7 +53,7 @@ function createBottles() {
  */
 function createEnemies() {
     let enemies = [];
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 40; i++) {
         let xPos = 600 + i * 300 + Math.random() * 150;
         enemies.push(new Chicken(xPos));
     }
